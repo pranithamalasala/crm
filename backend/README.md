@@ -7,7 +7,7 @@ A clean, structured CRM REST API for a college project.
 ## Project Structure
 
 ```
-crm_backend/
+crm/backend/
 ├── run.py                      # Application entry point
 ├── requirements.txt
 ├── .env.example                # Copy to .env and fill in values
@@ -37,23 +37,56 @@ crm_backend/
 
 ## Quick Start
 
-### 1. Clone & install dependencies
+### 1. Create & Activate Virtual Environment
+
+A virtual environment keeps your project's packages isolated from other Python projects.
+
+**Step 1 — Create the venv (run once):**
+```bash
+python -m venv venv
+```
+
+**Step 2 — Activate it:**
+
+| OS | Command |
+|----|---------|
+| Windows (CMD) | `venv\Scripts\activate` |
+| Windows (PowerShell) | `venv\Scripts\Activate.ps1` |
+| Mac / Linux | `source venv/bin/activate` |
+
+> ✅ You'll know it's active when you see `(venv)` at the start of your terminal line.
+
+> ⚠️ **PowerShell error?** Run this once as Administrator, then retry:
+> ```powershell
+> Set-ExecutionPolicy RemoteSigned
+> ```
+
+**Step 3 — Deactivate when done (optional):**
+```bash
+deactivate
+```
+
+> 🔁 Every time you open a new terminal to work on this project, re-run the activate command before anything else.
+
+---
+
+### 2. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Setup environment variables
+### 3. Setup environment variables
 ```bash
 cp .env.example .env
 # Edit .env with your MySQL credentials
 ```
 
-### 3. Create the database
+### 4. Create the database
 ```bash
 mysql -u root -p < migrations/schema.sql
 ```
 
-### 4. Run the server
+### 5. Run the server
 ```bash
 python run.py
 # Server starts at http://localhost:5000
