@@ -1,5 +1,6 @@
 # app/__init__.py
 from flask import Flask
+from flask_cors import CORS
 from config.config import Config
 from app.extensions import mysql
 
@@ -8,14 +9,15 @@ def create_app():
     app.config.from_object(Config)
 
     # MySQL config keys expected by flask_mysqldb
-    app.config["MYSQL_HOST"]     = Config.MYSQL_HOST
-    app.config["MYSQL_USER"]     = Config.MYSQL_USER
-    app.config["MYSQL_PASSWORD"] = Config.MYSQL_PASSWORD
-    app.config["MYSQL_DB"]       = Config.MYSQL_DB
-    app.config["MYSQL_PORT"]     = Config.MYSQL_PORT
+    app.config["MYSQL_HOST"]        = Config.MYSQL_HOST
+    app.config["MYSQL_USER"]        = Config.MYSQL_USER
+    app.config["MYSQL_PASSWORD"]    = Config.MYSQL_PASSWORD
+    app.config["MYSQL_DB"]          = Config.MYSQL_DB
+    app.config["MYSQL_PORT"]        = Config.MYSQL_PORT
     app.config["MYSQL_CURSORCLASS"] = "DictCursor"
 
     mysql.init_app(app)
+    CORS(app)
 
     # Register blueprints
     from app.routes.leads      import leads_bp

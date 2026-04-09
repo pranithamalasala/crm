@@ -14,13 +14,13 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")
     DEBUG      = os.getenv("FLASK_DEBUG", "False").lower() == "true"
 
-    # Flask-MySQLdb
-    MYSQL_HOST     = os.getenv("MYSQL_HOST",     "localhost")
-    MYSQL_PORT     = int(os.getenv("MYSQL_PORT", "3306"))
-    MYSQL_USER     = os.getenv("MYSQL_USER",     "root")
-    MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
-    MYSQL_DB       = os.getenv("MYSQL_DB",       "crm_db")
-    MYSQL_CURSORCLASS = "DictCursor"          # rows returned as dicts
+    # Flask-MySQLdb (FORCED VALUES - FIX)
+    MYSQL_HOST = "localhost"
+    MYSQL_PORT = 3306
+    MYSQL_USER = "root"
+    MYSQL_PASSWORD = ""   # VERY IMPORTANT (empty for XAMPP)
+    MYSQL_DB = "crm"      # match your created database
+    MYSQL_CURSORCLASS = "DictCursor"
 
 
 class DevelopmentConfig(Config):

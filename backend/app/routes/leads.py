@@ -53,12 +53,13 @@ def create_lead():
 
     cur = mysql.connection.cursor()
     cur.execute(
-        "INSERT INTO leads (name, email, phone, status, assigned_to) "
-        "VALUES (%s, %s, %s, %s, %s)",
+        "INSERT INTO leads (name, email, phone, source, status, assigned_to) "
+        "VALUES (%s, %s, %s, %s, %s, %s)",
         (
             data["name"],
             data["email"],
             data.get("phone"),
+            data.get("source"),
             data.get("status", "New Lead"),
             data.get("assigned_to"),
         )
@@ -80,7 +81,7 @@ def update_lead(lead_id):
 
     fields = []
     values = []
-    for col in ["name", "email", "phone", "status", "assigned_to"]:
+    for col in ["name", "email", "phone", "source", "status", "assigned_to"]:
         if col in data:
             fields.append(f"{col} = %s")
             values.append(data[col])

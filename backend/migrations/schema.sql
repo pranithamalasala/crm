@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS leads (
     name        VARCHAR(100)        NOT NULL,
     email       VARCHAR(150)        NOT NULL UNIQUE,
     phone       VARCHAR(20),
+    source      VARCHAR(100),
     status      ENUM('New Lead','Contacted','Demo','Negotiation','Won','Lost') DEFAULT 'New Lead',
     assigned_to INT,
     created_at  DATETIME            DEFAULT CURRENT_TIMESTAMP,
