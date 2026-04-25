@@ -129,16 +129,7 @@ Runs at: **http://localhost:5173**
 
 ---
 
-## 📸 Screenshots
 
-> Add:
-
-* Dashboard
-* Leads page
-* Pipeline board
-* Analytics
-
----
 
 ## 🎯 What This Project Demonstrates
 
