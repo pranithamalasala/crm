@@ -1,185 +1,165 @@
-# NexusCRM — Full Stack CRM System
+# 🚀 NexusCRM — Full Stack CRM System (Enhanced)
 
-A full-stack Customer Relationship Management (CRM) web application built as a college project. Features a modern React dashboard with a Flask REST API backend and MySQL database.
+A modern, full-stack **Customer Relationship Management (CRM)** application built with a **React frontend and Flask backend**, designed for seamless lead tracking, customer management, and sales pipeline visualization.
+
+⚡ **Zero-setup backend** — uses SQLite (auto-created on first run), eliminating the need for MySQL or XAMPP.
 
 ---
 
 ## 👥 Contributors
 
-| Name | GitHub | Role |
-|------|--------|------|
-| Pranitha | [@pranithamalasala](https://github.com/pranithamalasala) | Frontend & Integration |
-| Sushant | [@sushantbhatt17](https://github.com/sushantbhatt17) | Backend & Database |
+| Name              | GitHub            | Role                   |
+| ----------------- | ----------------- | ---------------------- |
+| **Pranitha**      | @pranithamalasala | Frontend & Integration |
+| **Sushant Bhatt** | @sushantbhatt17   | Backend & Database     |
+
+---
+
+## 🚀 Quick Start
+
+### 🔹 Backend (Terminal 1)
+
+```bash
+cd backend
+pip install -r requirements.txt
+python run.py
+```
+
+Runs at: **http://localhost:5000**
+📌 Database (`crm.db`) is created automatically with seed data.
+
+---
+
+### 🔹 Frontend (Terminal 2)
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Runs at: **http://localhost:5173**
+
+---
+
+### 🔐 Demo Login
+
+| Email                                 | Password |
+| ------------------------------------- | -------- |
+| [admin@crm.com](mailto:admin@crm.com) | admin123 |
+
+---
+
+## ✨ Key Features
+
+* 🔐 Authentication system with persistent session
+* 📊 Live analytics dashboard (charts + KPIs)
+* 👥 Lead management (CRUD, filtering, sorting, CSV export)
+* 🗂 Sales pipeline with Kanban board & stage transitions
+* 👤 Customer profiles with activity timeline
+* 📝 Activity logging system
+* 📱 Fully responsive modern UI (dark theme)
+
+---
+
+## 🔌 API Overview
+
+| Method | Endpoint          | Description             |
+| ------ | ----------------- | ----------------------- |
+| POST   | `/users/login`    | User login              |
+| GET    | `/leads`          | Fetch leads             |
+| POST   | `/leads`          | Create lead             |
+| PUT    | `/leads/:id`      | Update lead             |
+| DELETE | `/leads/:id`      | Delete lead             |
+| GET    | `/pipeline/board` | Pipeline board          |
+| POST   | `/pipeline/move`  | Move lead across stages |
+| GET    | `/customers`      | Fetch customers         |
+| PUT    | `/customers/:id`  | Update customer         |
+| DELETE | `/customers/:id`  | Delete customer         |
+| GET    | `/activities`     | Activity logs           |
+| POST   | `/activities`     | Create activity         |
+| GET    | `/analytics`      | Dashboard analytics     |
 
 ---
 
 ## 🧱 Tech Stack
 
-### Frontend
-- **React 18** + **Vite** — UI & build tool
-- **Tailwind CSS** — Styling
-- **React Router v6** — Client-side routing
-- **Recharts** — Charts & graphs
-- **Lucide React** — Icons
+**Frontend**
 
-### Backend
-- **Flask 3** — REST API
-- **Flask-MySQLdb** — MySQL connector
-- **Flask-CORS** — Cross-origin requests
-- **python-dotenv** — Environment config
+* React 18 + Vite
+* Tailwind CSS
+* React Router v6
+* Recharts
+* Lucide React
 
-### Database
-- **MySQL** (via XAMPP locally)
+**Backend**
 
----
+* Flask 3
+* flask-cors
+* python-dotenv
+* bcrypt
 
-## 📁 Project Structure
+**Database**
 
-```
-crm/
-├── backend/                  # Flask REST API
-│   ├── app/
-│   │   ├── __init__.py       # App factory, CORS, blueprints
-│   │   ├── extensions.py     # MySQL instance
-│   │   ├── routes/
-│   │   │   ├── leads.py      # CRUD for leads
-│   │   │   ├── customers.py  # Customer routes
-│   │   │   ├── pipeline.py   # Pipeline routes
-│   │   │   ├── activities.py # Activity log routes
-│   │   │   └── analytics.py  # Analytics routes
-│   │   └── utils/
-│   │       ├── helpers.py    # success/error response helpers
-│   │       └── validators.py
-│   ├── config/
-│   │   └── config.py         # App config from .env
-│   ├── migrations/
-│   │   └── schema.sql        # Database schema
-│   ├── requirements.txt
-│   ├── run.py                # Entry point
-│   └── .env.example          # Environment variable template
-│
-└── frontend/                 # React + Vite app
-    ├── src/
-    │   ├── App.jsx            # Routes & auth guard
-    │   ├── pages/             # Login, Dashboard, Leads, Pipeline, Profile
-    │   ├── components/        # Layout, Sidebar, Navbar, Cards, Tables
-    │   └── data/              # Mock data
-    ├── package.json
-    └── README.md              # Frontend-specific docs
-```
+* SQLite (auto-managed, no external setup)
 
 ---
 
-## 🚀 Getting Started
+## 🛠 Improvements & Fixes
 
-### Prerequisites
+### 🔹 Backend Enhancements
 
-- Node.js 18+
-- Python 3.10+
-- XAMPP (MySQL running on port 3306)
+* Replaced MySQL + XAMPP with **SQLite (zero setup)**
+* Removed Flask-MySQLdb dependency
+* Implemented `/users/login` authentication endpoint
+* Refactored SQL schema for SQLite compatibility
+* Added analytics metrics (revenue, pipeline value, trends)
+* Fixed missing dependencies (bcrypt)
 
----
+### 🔹 Frontend Enhancements
 
-### 1. Database Setup
-
-1. Start **XAMPP** and make sure **MySQL** is running
-2. Open **phpMyAdmin** → go to the **SQL** tab
-3. Run the schema:
-
-```sql
-CREATE DATABASE IF NOT EXISTS crm;
-USE crm;
-```
-
-Then import `backend/migrations/schema.sql` or paste its contents and run it.
-
----
-
-### 2. Backend Setup
-
-```bash
-cd backend
-
-# Copy environment file
-copy .env.example .env        # Windows
-cp .env.example .env          # Mac/Linux
-
-# Edit .env — set your MySQL password and DB name
-MYSQL_DB=crm
-MYSQL_PASSWORD=your_password
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Start Flask server
-python run.py
-```
-
-Backend runs at **http://localhost:5000**
-
----
-
-### 3. Frontend Setup
-
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start dev server
-npm run dev
-```
-
-Frontend runs at **http://localhost:5173**
-
----
-
-## 🔌 API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/leads` | Get all leads |
-| POST | `/leads` | Create a new lead |
-| PUT | `/leads/:id` | Update a lead |
-| DELETE | `/leads/:id` | Delete a lead |
-| GET | `/customers` | Get all customers |
-| GET | `/pipeline` | Get pipeline stages |
-| GET | `/activities` | Get activity log |
-| GET | `/analytics` | Get analytics data |
-
----
-
-## ✨ Features
-
-- 🔐 Login screen with auth guard
-- 📊 Dashboard with revenue charts and conversion funnel
-- 👥 Leads management — search, filter, add new leads
-- 🗂 Sales pipeline — Kanban board with deal stages
-- 👤 Customer profiles with activity timeline
-- 📱 Responsive layout with dark theme
-
----
-
-## ⚙️ Environment Variables
-
-Create `backend/.env` from `.env.example`:
-
-```env
-FLASK_DEBUG=True
-SECRET_KEY=your-secret-key
-
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_USER=root
-MYSQL_PASSWORD=
-MYSQL_DB=crm
-```
+* Converted static UI into **fully dynamic data-driven app**
+* Implemented real API integration across all pages
+* Added Analytics & Customers modules
+* Enabled full CRUD (Create, Edit, Delete) functionality
+* Implemented pipeline stage transitions
+* Added CSV export for leads
+* Fixed authentication persistence using sessionStorage
+* Added activity logging system
 
 ---
 
 ## 📸 Screenshots
 
-> Dashboard, Leads page, and Pipeline board
+> Add:
 
-*(Add screenshots here once the app is fully running)*
+* Dashboard
+* Leads page
+* Pipeline board
+* Analytics
+
+---
+
+## 🎯 What This Project Demonstrates
+
+* End-to-end full-stack development
+* REST API design with Flask
+* Dynamic UI with React
+* State management & routing
+* Data visualization with charts
+* Clean modular architecture
+
+---
+
+## 🚧 Future Improvements
+
+* JWT-based authentication
+* Role-based access control
+* Cloud deployment (AWS / Vercel / Docker)
+* Real-time notifications
+
+---
+
+## ⭐ Support
+
+If you found this project useful, consider giving it a ⭐ on GitHub!
