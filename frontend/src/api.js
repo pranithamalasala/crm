@@ -1,4 +1,4 @@
-export const API = 'http://localhost:5000'
+export const API = 'https://crm-5xc4.onrender.com'
 
 export async function apiFetch(path, options = {}) {
   const res = await fetch(`${API}${path}`, {
