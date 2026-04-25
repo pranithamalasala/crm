@@ -1,250 +1,152 @@
-import { useParams, useNavigate } from 'react-router-dom'
-import {
-  ArrowLeft, Mail, Phone, Building2, Calendar,
-  Tag, MessageSquare, PhoneCall, GitBranch, Star,
-  TrendingUp, Edit2, MoreHorizontal
-} from 'lucide-react'
-import { customers, leads } from '../data/mockData'
+import{useParams,useNavigate}from 'react-router-dom'
+import{useEffect,useState}from 'react'
+import{ArrowLeft,Mail,Phone,Building2,Calendar,PhoneCall,Loader2,Plus,Star}from 'lucide-react'
+import{apiFetch}from '../api'
+import{inrShort}from '../utils/inr'
 
-const activityIcon = { call: PhoneCall, email: Mail, deal: GitBranch, meeting: Calendar }
-const activityColor = {
-  call:    'bg-blue-500/15 text-blue-400 border-blue-500/20',
-  email:   'bg-violet-500/15 text-violet-400 border-violet-500/20',
-  deal:    'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
-  meeting: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
-}
+const ACT_ICON={call:PhoneCall,email:Mail,meeting:Calendar}
+const ACT_COLOR={call:'rgba(56,189,248,0.12)|#38bdf8|rgba(56,189,248,0.2)',email:'rgba(167,139,250,0.12)|#a78bfa|rgba(167,139,250,0.2)',meeting:'rgba(251,191,36,0.12)|#fbbf24|rgba(251,191,36,0.2)'}
+const sc=(t)=>{ const[bg,col,brd]=(ACT_COLOR[t]||ACT_COLOR.email).split('|'); return{background:bg,color:col,border:`1px solid ${brd}`} }
 
-const statusBadge = {
-  customer:    'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
-  negotiation: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
-  hot:         'bg-red-500/15 text-red-400 border-red-500/20',
-  warm:        'bg-amber-500/15 text-amber-400 border-amber-500/20',
-  cold:        'bg-slate-500/15 text-slate-400 border-slate-500/20',
-}
+const STATUS_COLOR={'New Lead':'#64748b','Contacted':'#38bdf8','Demo':'#a78bfa','Negotiation':'#fbbf24','Won':'#34d399','Lost':'#f87171'}
 
-export default function CustomerProfile() {
-  const { id } = useParams()
-  const navigate = useNavigate()
+export default function CustomerProfile(){
+  const{id}=useParams(); const navigate=useNavigate()
+  const[lead,setLead]=useState(null)
+  const[activities,setActivities]=useState([])
+  const[loading,setLoading]=useState(true)
+  const[logType,setLogType]=useState('call')
+  const[logNote,setLogNote]=useState('')
+  const[logging,setLogging]=useState(false)
 
-  const customer = customers.find(c => c.id === Number(id))
-  const lead = leads.find(l => l.id === Number(id))
+  useEffect(()=>{
+    Promise.all([apiFetch(`/leads/${id}`),apiFetch(`/activities?lead_id=${id}`)])
+      .then(([l,a])=>{ if(l.ok)setLead(l.data.data); if(a.ok)setActivities(a.data.data||[]) })
+      .finally(()=>setLoading(false))
+  },[id])
 
-  const person = customer || (lead ? {
-    id: lead.id,
-    name: lead.name,
-    company: lead.company,
-    email: lead.email,
-    phone: lead.phone,
-    role: 'Contact',
-    avatar: lead.name.split(' ').map(n => n[0]).join(''),
-    status: lead.status,
-    deal: `$${lead.value.toLocaleString()}`,
-    plan: lead.source,
-    joinDate: lead.createdAt,
-    tags: [lead.status.charAt(0).toUpperCase() + lead.status.slice(1), lead.source, 'Lead'],
-    notes: `Lead assigned to ${lead.assignee}. Lead score: ${lead.score}/100. Source: ${lead.source}.`,
-    activities: [
-      { type: 'email', label: 'Initial outreach sent', date: '1 week ago' },
-      { type: 'call',  label: 'Discovery call completed', date: '3 days ago' },
-      { type: 'email', label: 'Follow-up email sent', date: 'Yesterday' },
-    ]
-  } : null)
-
-  if (!person) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-slate-500 animate-fade-in">
-        <p className="text-lg font-semibold mb-3 text-slate-300">Profile not found</p>
-        <p className="text-sm mb-5">The contact with ID #{id} does not exist.</p>
-        <button onClick={() => navigate(-1)} className="btn-ghost text-sm">
-          <ArrowLeft size={14} /> Go back
-        </button>
-      </div>
-    )
+  const logActivity=async()=>{
+    setLogging(true)
+    try{
+      const{ok,data}=await apiFetch('/activities',{method:'POST',body:JSON.stringify({lead_id:Number(id),user_id:1,type:logType,notes:logNote})})
+      if(ok){setActivities(p=>[{activity_id:data.data?.activity_id,type:logType,notes:logNote,date:new Date().toISOString(),user_name:'You'},...p]);setLogNote('')}
+    }finally{setLogging(false)}
   }
 
-  return (
-    <div className="space-y-5 animate-slide-up max-w-5xl">
-      {/* Back nav */}
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-sm text-slate-500 hover:text-white transition-colors"
-      >
-        <ArrowLeft size={15} /> Back to list
+  if(loading)return(<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'60vh',gap:10,color:'#475569'}}><Loader2 size={20} style={{animation:'spin 1s linear infinite'}}/>Loading…</div>)
+  if(!lead)return(<div style={{textAlign:'center',padding:64}}><p style={{color:'#475569',marginBottom:16}}>Profile not found</p><button onClick={()=>navigate(-1)} style={{background:'rgba(14,165,233,0.1)',border:'1px solid rgba(14,165,233,0.2)',color:'#38bdf8',padding:'8px 16px',borderRadius:10,cursor:'pointer',fontFamily:"'Outfit',sans-serif",fontWeight:600}}>← Go back</button></div>)
+
+  const statusColor=STATUS_COLOR[lead.status]||'#64748b'
+
+  return(
+    <div style={{display:'flex',flexDirection:'column',gap:16,maxWidth:960,fontFamily:"'Outfit',sans-serif"}}>
+      <button onClick={()=>navigate(-1)} style={{display:'flex',alignItems:'center',gap:6,background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:'0.82rem',fontFamily:"'Outfit',sans-serif",fontWeight:600,width:'fit-content',transition:'color 0.15s'}}
+        onMouseEnter={e=>e.currentTarget.style.color='#7dd3fc'}
+        onMouseLeave={e=>e.currentTarget.style.color='#475569'}>
+        <ArrowLeft size={14}/> Back
       </button>
 
       {/* Hero card */}
-      <div className="glass-card p-6">
-        <div className="flex items-start gap-5">
-          {/* Avatar */}
-          <div className="relative flex-shrink-0">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center text-xl font-bold text-white shadow-glow-blue">
-              {person.avatar}
+      <div style={{background:'rgba(8,47,73,0.2)',border:'1px solid rgba(14,165,233,0.12)',borderRadius:20,padding:24,position:'relative',overflow:'hidden'}}>
+        <div style={{position:'absolute',top:-40,right:-40,width:200,height:200,borderRadius:'50%',background:'rgba(14,165,233,0.04)',filter:'blur(40px)',pointerEvents:'none'}}/>
+        <div style={{display:'flex',alignItems:'flex-start',gap:16}}>
+          <div style={{position:'relative',flexShrink:0}}>
+            <div style={{width:60,height:60,borderRadius:16,background:'linear-gradient(135deg,#0ea5e9,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.2rem',fontWeight:800,color:'white',boxShadow:'0 0 24px rgba(14,165,233,0.4)'}}>
+              {lead.name?.split(' ').map(n=>n[0]).join('')}
             </div>
-            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-slate-900 flex items-center justify-center">
-              <div className="w-2 h-2 rounded-full bg-white animate-pulse-slow" />
-            </div>
+            <div style={{position:'absolute',bottom:-2,right:-2,width:14,height:14,borderRadius:'50%',background:'#34d399',border:'2px solid #050810'}}/>
           </div>
-
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2.5 mb-0.5">
-                  <h1 className="text-2xl font-bold text-white">{person.name}</h1>
-                  <button className="text-slate-600 hover:text-amber-400 transition-colors">
-                    <Star size={15} />
-                  </button>
-                </div>
-                <p className="text-slate-400 text-sm">{person.role} · <span className="text-slate-300">{person.company}</span></p>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <span className={`badge border text-xs ${statusBadge[person.status] || 'bg-slate-500/15 text-slate-400 border-slate-500/20'}`}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                  {person.status.charAt(0).toUpperCase() + person.status.slice(1)}
-                </span>
-                <button className="btn-ghost h-9 text-sm px-3">
-                  <Edit2 size={13} /> Edit
-                </button>
-                <button className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors border border-slate-700/40">
-                  <MoreHorizontal size={15} />
-                </button>
-              </div>
+          <div style={{flex:1}}>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4}}>
+              <h1 style={{fontSize:'1.4rem',fontWeight:800,color:'white',letterSpacing:'-0.02em'}}>{lead.name}</h1>
+              <Star size={14} color="#334155" style={{cursor:'pointer'}}/>
+              <span style={{fontSize:'0.65rem',fontWeight:700,padding:'2px 8px',borderRadius:99,background:`${statusColor}20`,color:statusColor,border:`1px solid ${statusColor}35`,marginLeft:'auto'}}>{lead.status}</span>
             </div>
-
-            {/* Tags */}
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {person.tags.map(tag => (
-                <span key={tag} className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-slate-800/80 text-slate-400 border border-slate-700/40">
-                  <Tag size={9} /> {tag}
-                </span>
+            <p style={{fontSize:'0.82rem',color:'#475569'}}>{lead.company||'No company'} · {lead.email}</p>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginTop:16,paddingTop:16,borderTop:'1px solid rgba(14,165,233,0.08)'}}>
+              {[[Mail,'Email',lead.email],[Phone,'Phone',lead.phone||'N/A'],[Building2,'Company',lead.company||'N/A'],[Calendar,'Added',lead.created_at?.slice(0,10)||'N/A']].map(([Icon,label,value])=>(
+                <div key={label}>
+                  <p style={{fontSize:'0.62rem',color:'#475569',display:'flex',alignItems:'center',gap:4,marginBottom:3}}><Icon size={10}/>{label}</p>
+                  <p style={{fontSize:'0.8rem',color:'#e2e8f0',fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{value}</p>
+                </div>
               ))}
             </div>
           </div>
         </div>
-
-        {/* Quick contact strip */}
-        <div className="grid grid-cols-4 gap-4 mt-5 pt-5 border-t border-slate-800/60">
-          {[
-            { label: 'Email', value: person.email, icon: Mail },
-            { label: 'Phone', value: person.phone, icon: Phone },
-            { label: 'Company', value: person.company, icon: Building2 },
-            { label: 'Member Since', value: person.joinDate, icon: Calendar },
-          ].map(({ label, value, icon: Icon }) => (
-            <div key={label} className="min-w-0">
-              <p className="text-xs text-slate-500 mb-1 flex items-center gap-1.5">
-                <Icon size={10} /> {label}
-              </p>
-              <p className="text-sm text-slate-200 font-medium truncate">{value}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex gap-2 mt-5">
-          <button className="btn-primary text-sm h-9">
-            <Mail size={13} /> Send Email
-          </button>
-          <button className="btn-ghost text-sm h-9 px-3 border border-slate-700/40">
-            <PhoneCall size={13} /> Log Call
-          </button>
-          <button className="btn-ghost text-sm h-9 px-3 border border-slate-700/40">
-            <Calendar size={13} /> Schedule Meeting
-          </button>
-          <button className="btn-ghost text-sm h-9 px-3 border border-slate-700/40">
-            <GitBranch size={13} /> Create Deal
-          </button>
-        </div>
       </div>
 
-      {/* Three-column detail grid */}
-      <div className="grid grid-cols-3 gap-4">
-        {/* Deal Overview */}
-        <div className="glass-card p-5">
-          <h2 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-            <TrendingUp size={14} className="text-brand-400" /> Deal Overview
-          </h2>
-          <div className="space-y-3">
-            {[
-              { label: 'Deal Value',     value: person.deal },
-              { label: 'Plan / Source',  value: person.plan },
-              { label: 'Status',         value: person.status.charAt(0).toUpperCase() + person.status.slice(1) },
-              { label: 'Contact Since',  value: person.joinDate },
-            ].map(({ label, value }) => (
-              <div
-                key={label}
-                className="flex justify-between items-center text-sm border-b border-slate-800/40 pb-3 last:border-0 last:pb-0"
-              >
-                <span className="text-slate-500">{label}</span>
-                <span className="text-slate-200 font-medium">{value}</span>
+      {/* 3-col grid */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:14}}>
+        {/* Deal info */}
+        <div style={{background:'rgba(8,47,73,0.2)',border:'1px solid rgba(14,165,233,0.1)',borderRadius:16,padding:18}}>
+          <p style={{fontSize:'0.78rem',fontWeight:700,color:'white',marginBottom:14}}>Deal Overview</p>
+          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+            {[['Deal Value',inrShort(lead.value)],['Status',lead.status],['Source',lead.source||'N/A'],['Assigned To',lead.assigned_user||'N/A']].map(([k,v])=>(
+              <div key={k} style={{display:'flex',justifyContent:'space-between',alignItems:'center',borderBottom:'1px solid rgba(14,165,233,0.05)',paddingBottom:8}}>
+                <span style={{fontSize:'0.72rem',color:'#475569'}}>{k}</span>
+                <span style={{fontSize:'0.78rem',color:'#e2e8f0',fontWeight:600}}>{v}</span>
               </div>
             ))}
           </div>
-
-          {/* Mini score bar if it's a lead */}
-          {lead && (
-            <div className="mt-4 pt-4 border-t border-slate-800/60">
-              <div className="flex justify-between text-xs mb-2">
-                <span className="text-slate-500">Lead Score</span>
-                <span className="font-mono text-slate-200 font-semibold">{lead.score}/100</span>
-              </div>
-              <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all ${lead.score >= 80 ? 'bg-emerald-500' : lead.score >= 60 ? 'bg-amber-500' : 'bg-slate-500'}`}
-                  style={{ width: `${lead.score}%` }}
-                />
-              </div>
+          <div style={{marginTop:14,paddingTop:14,borderTop:'1px solid rgba(14,165,233,0.08)'}}>
+            <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
+              <span style={{fontSize:'0.68rem',color:'#475569'}}>Lead Score</span>
+              <span style={{fontSize:'0.72rem',fontFamily:"'Space Mono',monospace",color:'#e2e8f0'}}>{lead.score||0}/100</span>
             </div>
-          )}
-        </div>
-
-        {/* Notes */}
-        <div className="glass-card p-5 flex flex-col">
-          <h2 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-            <MessageSquare size={14} className="text-violet-400" /> Notes
-          </h2>
-          <p className="text-sm text-slate-400 leading-relaxed flex-1">{person.notes}</p>
-          <div className="mt-4 pt-4 border-t border-slate-800/60">
-            <textarea
-              placeholder="Add a note…"
-              rows={2}
-              className="input-field text-sm resize-none"
-            />
-            <button className="btn-primary text-xs h-8 mt-2 px-3">
-              Save Note
-            </button>
+            <div style={{height:5,background:'rgba(14,165,233,0.08)',borderRadius:99,overflow:'hidden'}}>
+              <div style={{height:'100%',borderRadius:99,background:(lead.score||0)>=80?'#34d399':(lead.score||0)>=60?'#fbbf24':'#64748b',width:`${lead.score||0}%`,transition:'width 0.8s'}}/>
+            </div>
           </div>
         </div>
 
-        {/* Activity Timeline */}
-        <div className="glass-card p-5">
-          <h2 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-            <Calendar size={14} className="text-amber-400" /> Activity Timeline
-          </h2>
-          <div className="space-y-4 relative">
-            {/* Timeline line */}
-            <div className="absolute left-3.5 top-3.5 bottom-3.5 w-px bg-slate-800/60" />
+        {/* Notes */}
+        <div style={{background:'rgba(8,47,73,0.2)',border:'1px solid rgba(14,165,233,0.1)',borderRadius:16,padding:18,display:'flex',flexDirection:'column'}}>
+          <p style={{fontSize:'0.78rem',fontWeight:700,color:'white',marginBottom:12}}>Notes</p>
+          <textarea placeholder="Add a note about this lead…" rows={6} style={{flex:1,background:'rgba(8,47,73,0.3)',border:'1px solid rgba(14,165,233,0.12)',color:'#e2e8f0',fontFamily:"'Outfit',sans-serif",borderRadius:10,padding:'10px 12px',fontSize:'0.82rem',outline:'none',resize:'none',boxSizing:'border-box'}}
+            onFocus={e=>e.target.style.borderColor='rgba(14,165,233,0.35)'}
+            onBlur={e=>e.target.style.borderColor='rgba(14,165,233,0.12)'}/>
+          <button style={{marginTop:10,padding:'8px',background:'linear-gradient(135deg,#0ea5e9,#0284c7)',border:'none',color:'white',borderRadius:9,cursor:'pointer',fontWeight:600,fontSize:'0.78rem',fontFamily:"'Outfit',sans-serif"}}>Save Note</button>
+        </div>
 
-            {person.activities.map((act, i) => {
-              const Icon = activityIcon[act.type] || Mail
-              return (
-                <div key={i} className="flex items-start gap-3 relative">
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 border relative z-10 ${activityColor[act.type]}`}>
-                    <Icon size={11} />
+        {/* Activities */}
+        <div style={{background:'rgba(8,47,73,0.2)',border:'1px solid rgba(14,165,233,0.1)',borderRadius:16,padding:18,display:'flex',flexDirection:'column'}}>
+          <p style={{fontSize:'0.78rem',fontWeight:700,color:'white',marginBottom:12}}>Activity Timeline</p>
+          <div style={{background:'rgba(8,47,73,0.3)',border:'1px solid rgba(14,165,233,0.08)',borderRadius:10,padding:10,marginBottom:12}}>
+            <div style={{display:'flex',gap:6,marginBottom:8}}>
+              {['call','email','meeting'].map(t=>(
+                <button key={t} onClick={()=>setLogType(t)} style={{flex:1,padding:'5px',borderRadius:7,background:logType===t?'linear-gradient(135deg,#0ea5e9,#0284c7)':'rgba(14,165,233,0.06)',border:logType===t?'none':'1px solid rgba(14,165,233,0.1)',color:logType===t?'white':'#475569',cursor:'pointer',fontSize:'0.7rem',fontFamily:"'Outfit',sans-serif",fontWeight:600,textTransform:'capitalize',transition:'all 0.15s'}}>
+                  {t}
+                </button>
+              ))}
+            </div>
+            <input value={logNote} onChange={e=>setLogNote(e.target.value)} placeholder="Notes (optional)"
+              style={{width:'100%',background:'rgba(8,47,73,0.4)',border:'1px solid rgba(14,165,233,0.12)',color:'#e2e8f0',fontFamily:"'Outfit',sans-serif",borderRadius:8,padding:'7px 10px',fontSize:'0.78rem',outline:'none',boxSizing:'border-box',marginBottom:8}}/>
+            <button onClick={logActivity} disabled={logging} style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'7px',background:'linear-gradient(135deg,#0ea5e9,#0284c7)',border:'none',color:'white',borderRadius:8,cursor:logging?'not-allowed':'pointer',fontWeight:600,fontSize:'0.75rem',fontFamily:"'Outfit',sans-serif",opacity:logging?0.7:1}}>
+              {logging?<><Loader2 size={11} style={{animation:'spin 1s linear infinite'}}/>Logging…</>:<><Plus size={11}/>Log Activity</>}
+            </button>
+          </div>
+          <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:8}}>
+            {activities.length===0&&<p style={{fontSize:'0.75rem',color:'#334155',textAlign:'center',padding:16}}>No activities yet</p>}
+            {activities.map((a,i)=>{
+              const Icon=ACT_ICON[a.type]||Mail
+              const s=sc(a.type)
+              return(
+                <div key={a.activity_id||i} style={{display:'flex',alignItems:'flex-start',gap:10}}>
+                  <div style={{width:28,height:28,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,...s}}>
+                    <Icon size={12}/>
                   </div>
-                  <div className="flex-1 pt-0.5">
-                    <p className="text-xs text-slate-300 font-medium leading-snug">{act.label}</p>
-                    <p className="text-xs text-slate-600 mt-0.5">{act.date}</p>
+                  <div style={{flex:1}}>
+                    <p style={{fontSize:'0.75rem',color:'#e2e8f0',fontWeight:600,textTransform:'capitalize'}}>{a.type}</p>
+                    {a.notes&&<p style={{fontSize:'0.7rem',color:'#475569',marginTop:1}}>{a.notes}</p>}
+                    <p style={{fontSize:'0.65rem',color:'#334155',marginTop:1}}>{a.date?.slice(0,10)||'Today'}</p>
                   </div>
                 </div>
               )
             })}
           </div>
-
-          <button className="mt-4 w-full text-xs text-slate-500 hover:text-slate-300 py-2 border border-dashed border-slate-800 hover:border-slate-600 rounded-lg transition-all">
-            + Log activity
-          </button>
         </div>
       </div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 }

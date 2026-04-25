@@ -1,64 +1,44 @@
-import { useLocation } from 'react-router-dom'
-import { Search, Bell, Plus, ChevronRight } from 'lucide-react'
-import { useState } from 'react'
+import { Bell, Search, Globe2 } from 'lucide-react'
 
-const routeMeta = {
-  '/dashboard': { title: 'Dashboard', crumb: ['Home', 'Dashboard'] },
-  '/leads': { title: 'Leads', crumb: ['Home', 'Leads'] },
-  '/pipeline': { title: 'Sales Pipeline', crumb: ['Home', 'Pipeline'] },
-  '/analytics': { title: 'Analytics', crumb: ['Home', 'Analytics'] },
-}
-
-export default function Navbar() {
-  const { pathname } = useLocation()
-  const meta = routeMeta[pathname] || { title: 'Page', crumb: ['Home'] }
-  const [searchFocused, setSearchFocused] = useState(false)
-
+export default function Navbar({ user }) {
   return (
-    <header className="h-14 bg-slate-900/60 border-b border-slate-800/60 flex items-center px-6 gap-4 backdrop-blur-sm flex-shrink-0">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 text-sm min-w-0">
-        {meta.crumb.map((item, i) => (
-          <span key={item} className="flex items-center gap-1.5">
-            {i > 0 && <ChevronRight size={12} className="text-slate-600" />}
-            <span className={i === meta.crumb.length - 1 ? 'text-slate-200 font-semibold' : 'text-slate-500'}>
-              {item}
-            </span>
-          </span>
-        ))}
-      </div>
-
-      {/* Search */}
-      <div className={`flex-1 max-w-sm mx-auto relative transition-all duration-200 ${searchFocused ? 'max-w-md' : ''}`}>
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
-        <input
-          type="text"
-          placeholder="Search leads, deals, customers…"
-          className="input-field pl-9 py-2 text-sm h-9"
-          onFocus={() => setSearchFocused(true)}
-          onBlur={() => setSearchFocused(false)}
+    <header style={{
+      height: 56, flexShrink: 0, display: 'flex', alignItems: 'center',
+      padding: '0 24px', gap: 16,
+      background: 'rgba(5,8,16,0.8)', backdropFilter: 'blur(20px)',
+      borderBottom: '1px solid rgba(14,165,233,0.08)',
+    }}>
+      <div style={{ position:'relative', flex:1, maxWidth:320 }}>
+        <Search size={13} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'#334155' }}/>
+        <input placeholder="Search anything…" style={{
+          width:'100%', background:'rgba(8,47,73,0.3)', border:'1px solid rgba(14,165,233,0.1)',
+          color:'#e2e8f0', fontFamily:"'Outfit',sans-serif", borderRadius:10,
+          padding:'7px 12px 7px 34px', fontSize:'0.8rem', outline:'none', boxSizing:'border-box',
+        }}
+          onFocus={e=>{ e.target.style.borderColor='rgba(14,165,233,0.3)'; e.target.style.background='rgba(8,47,73,0.5)' }}
+          onBlur={e=>{ e.target.style.borderColor='rgba(14,165,233,0.1)'; e.target.style.background='rgba(8,47,73,0.3)' }}
         />
-        <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-600 font-mono bg-slate-700/50 px-1.5 py-0.5 rounded">
-          ⌘K
-        </kbd>
       </div>
-
-      <div className="flex items-center gap-2 ml-auto">
-        {/* Add new */}
-        <button className="btn-primary text-sm h-9 px-3.5">
-          <Plus size={14} />
-          New Lead
+      <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:12 }}>
+        <button style={{
+          width:34, height:34, display:'flex', alignItems:'center', justifyContent:'center',
+          background:'rgba(14,165,233,0.06)', border:'1px solid rgba(14,165,233,0.1)',
+          borderRadius:10, cursor:'pointer', color:'#475569', position:'relative',
+          transition:'all 0.2s',
+        }}
+          onMouseEnter={e=>{ e.currentTarget.style.color='#38bdf8'; e.currentTarget.style.borderColor='rgba(14,165,233,0.3)' }}
+          onMouseLeave={e=>{ e.currentTarget.style.color='#475569'; e.currentTarget.style.borderColor='rgba(14,165,233,0.1)' }}>
+          <Bell size={14}/>
+          <span style={{ position:'absolute', top:8, right:8, width:6, height:6, borderRadius:'50%', background:'#0ea5e9', border:'1px solid #050810' }}/>
         </button>
-
-        {/* Notifications */}
-        <button className="relative w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors">
-          <Bell size={16} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-500 rounded-full ring-2 ring-slate-900" />
-        </button>
-
-        {/* Avatar */}
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-violet-500 flex items-center justify-center text-xs font-bold text-white cursor-pointer">
-          JT
+        <div style={{
+          width:30, height:30, borderRadius:8,
+          background:'linear-gradient(135deg,#7c3aed,#0ea5e9)',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          fontSize:'0.65rem', fontWeight:800, color:'white', cursor:'pointer',
+          boxShadow:'0 0 12px rgba(14,165,233,0.3)',
+        }}>
+          {user?.name?.split(' ').map(n=>n[0]).join('') || 'AU'}
         </div>
       </div>
     </header>

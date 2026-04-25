@@ -2,13 +2,13 @@ import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Navbar from './Navbar'
 
-export default function Layout({ onLogout }) {
+export default function Layout({ onLogout, user }) {
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar onLogout={onLogout} />
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <Navbar />
-        <main className="flex-1 overflow-y-auto p-6 animate-fade-in">
+    <div style={{ display:'flex', height:'100vh', overflow:'hidden', background:'#050810', fontFamily:"'Outfit',sans-serif" }}>
+      <Sidebar onLogout={onLogout} user={user} />
+      <div style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0, overflow:'hidden' }}>
+        <Navbar user={user} />
+        <main style={{ flex:1, overflowY:'auto', padding:24 }}>
           <Outlet />
         </main>
       </div>

@@ -1,7 +1,14 @@
-# app/utils/helpers.py
 from flask import jsonify
 
 PIPELINE_STAGES = ["New Lead", "Contacted", "Demo", "Negotiation", "Won", "Lost"]
+
+def row_to_dict(row):
+    if row is None:
+        return None
+    return dict(row)
+
+def rows_to_list(rows):
+    return [dict(r) for r in rows]
 
 def success(data=None, message="Success", status=200):
     return jsonify({"success": True, "message": message, "data": data}), status
@@ -10,7 +17,6 @@ def error(message="Error", status=400):
     return jsonify({"success": False, "message": message, "data": None}), status
 
 def next_stage(current):
-    """Return the next pipeline stage, or None if already terminal."""
     terminal = {"Won", "Lost"}
     if current in terminal:
         return None

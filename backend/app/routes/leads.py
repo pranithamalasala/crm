@@ -1,110 +1,87 @@
-# app/routes/leads.py
 from flask import Blueprint, request
-from app.extensions import mysql
-from app.utils.helpers import success, error
+from app import get_db
+from app.utils.helpers import success, error, rows_to_list, row_to_dict
 
 leads_bp = Blueprint("leads", __name__, url_prefix="/leads")
 
-# ── GET /leads ──────────────────────────────────────────────────────────────
 @leads_bp.route("", methods=["GET"])
 def get_leads():
     status = request.args.get("status")
-    cur = mysql.connection.cursor()
+    db = get_db()
     if status:
-        cur.execute(
+        rows = db.execute(
             "SELECT l.*, u.name AS assigned_user FROM leads l "
             "LEFT JOIN users u ON l.assigned_to = u.id "
-            "WHERE l.status = %s ORDER BY l.created_at DESC",
-            (status,)
-        )
+            "WHERE l.status = ? ORDER BY l.created_at DESC", (status,)
+        ).fetchall()
     else:
-        cur.execute(
+        rows = db.execute(
             "SELECT l.*, u.name AS assigned_user FROM leads l "
             "LEFT JOIN users u ON l.assigned_to = u.id "
             "ORDER BY l.created_at DESC"
-        )
-    leads = cur.fetchall()
-    cur.close()
-    return success(leads)
+        ).fetchall()
+    return success(rows_to_list(rows))
 
-# ── GET /leads/<id> ──────────────────────────────────────────────────────────
 @leads_bp.route("/<int:lead_id>", methods=["GET"])
 def get_lead(lead_id):
-    cur = mysql.connection.cursor()
-    cur.execute(
+    db = get_db()
+    row = db.execute(
         "SELECT l.*, u.name AS assigned_user FROM leads l "
-        "LEFT JOIN users u ON l.assigned_to = u.id WHERE l.id = %s",
-        (lead_id,)
-    )
-    lead = cur.fetchone()
-    cur.close()
-    if not lead:
+        "LEFT JOIN users u ON l.assigned_to = u.id WHERE l.id = ?", (lead_id,)
+    ).fetchone()
+    if not row:
         return error("Lead not found", 404)
-    return success(lead)
+    return success(row_to_dict(row))
 
-# ── POST /leads ──────────────────────────────────────────────────────────────
 @leads_bp.route("", methods=["POST"])
 def create_lead():
-    data = request.get_json()
-    required = ["name", "email"]
-    for field in required:
+    data = request.get_json() or {}
+    for field in ["name", "email"]:
         if not data.get(field):
             return error(f"'{field}' is required")
-
-    cur = mysql.connection.cursor()
-    cur.execute(
-        "INSERT INTO leads (name, email, phone, source, status, assigned_to) "
-        "VALUES (%s, %s, %s, %s, %s, %s)",
-        (
-            data["name"],
-            data["email"],
-            data.get("phone"),
-            data.get("source"),
-            data.get("status", "New Lead"),
-            data.get("assigned_to"),
+    db = get_db()
+    try:
+        cur = db.execute(
+            "INSERT INTO leads (name, email, phone, company, source, status, score, value, assigned_to) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                data["name"], data["email"],
+                data.get("phone"), data.get("company"),
+                data.get("source"),
+                data.get("status", "New Lead"),
+                data.get("score", 0),
+                data.get("value", 0),
+                data.get("assigned_to"),
+            )
         )
-    )
-    mysql.connection.commit()
-    lead_id = cur.lastrowid
-    cur.close()
-    return success({"id": lead_id}, "Lead created successfully", 201)
+        db.commit()
+        return success({"id": cur.lastrowid}, "Lead created successfully", 201)
+    except Exception as e:
+        return error(str(e))
 
-# ── PUT /leads/<id> ──────────────────────────────────────────────────────────
 @leads_bp.route("/<int:lead_id>", methods=["PUT"])
 def update_lead(lead_id):
-    data = request.get_json()
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT id FROM leads WHERE id = %s", (lead_id,))
-    if not cur.fetchone():
-        cur.close()
+    data = request.get_json() or {}
+    db = get_db()
+    if not db.execute("SELECT id FROM leads WHERE id = ?", (lead_id,)).fetchone():
         return error("Lead not found", 404)
-
-    fields = []
-    values = []
-    for col in ["name", "email", "phone", "source", "status", "assigned_to"]:
+    fields, values = [], []
+    for col in ["name", "email", "phone", "company", "source", "status", "score", "value", "assigned_to"]:
         if col in data:
-            fields.append(f"{col} = %s")
+            fields.append(f"{col} = ?")
             values.append(data[col])
-
     if not fields:
-        cur.close()
         return error("No valid fields to update")
-
     values.append(lead_id)
-    cur.execute(f"UPDATE leads SET {', '.join(fields)} WHERE id = %s", values)
-    mysql.connection.commit()
-    cur.close()
+    db.execute(f"UPDATE leads SET {', '.join(fields)}, updated_at = CURRENT_TIMESTAMP WHERE id = ?", values)
+    db.commit()
     return success(message="Lead updated successfully")
 
-# ── DELETE /leads/<id> ───────────────────────────────────────────────────────
 @leads_bp.route("/<int:lead_id>", methods=["DELETE"])
 def delete_lead(lead_id):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT id FROM leads WHERE id = %s", (lead_id,))
-    if not cur.fetchone():
-        cur.close()
+    db = get_db()
+    if not db.execute("SELECT id FROM leads WHERE id = ?", (lead_id,)).fetchone():
         return error("Lead not found", 404)
-    cur.execute("DELETE FROM leads WHERE id = %s", (lead_id,))
-    mysql.connection.commit()
-    cur.close()
+    db.execute("DELETE FROM leads WHERE id = ?", (lead_id,))
+    db.commit()
     return success(message="Lead deleted successfully")

@@ -1,65 +1,46 @@
-# app/routes/customers.py
 from flask import Blueprint, request
-from app.extensions import mysql
-from app.utils.helpers import success, error
+from app import get_db
+from app.utils.helpers import success, error, rows_to_list, row_to_dict
 
 customers_bp = Blueprint("customers", __name__, url_prefix="/customers")
 
-# ── GET /customers ───────────────────────────────────────────────────────────
 @customers_bp.route("", methods=["GET"])
 def get_customers():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM customers ORDER BY created_at DESC")
-    customers = cur.fetchall()
-    cur.close()
-    return success(customers)
+    db = get_db()
+    rows = db.execute("SELECT * FROM customers ORDER BY created_at DESC").fetchall()
+    return success(rows_to_list(rows))
 
-# ── GET /customers/<id> ──────────────────────────────────────────────────────
 @customers_bp.route("/<int:customer_id>", methods=["GET"])
 def get_customer(customer_id):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM customers WHERE customer_id = %s", (customer_id,))
-    customer = cur.fetchone()
-    cur.close()
-    if not customer:
+    db = get_db()
+    row = db.execute("SELECT * FROM customers WHERE customer_id = ?", (customer_id,)).fetchone()
+    if not row:
         return error("Customer not found", 404)
-    return success(customer)
+    return success(row_to_dict(row))
 
-# ── PUT /customers/<id> ──────────────────────────────────────────────────────
 @customers_bp.route("/<int:customer_id>", methods=["PUT"])
 def update_customer(customer_id):
-    data = request.get_json()
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT customer_id FROM customers WHERE customer_id = %s", (customer_id,))
-    if not cur.fetchone():
-        cur.close()
+    data = request.get_json() or {}
+    db = get_db()
+    if not db.execute("SELECT customer_id FROM customers WHERE customer_id = ?", (customer_id,)).fetchone():
         return error("Customer not found", 404)
-
     fields, values = [], []
     for col in ["name", "email", "phone", "company", "notes"]:
         if col in data:
-            fields.append(f"{col} = %s")
+            fields.append(f"{col} = ?")
             values.append(data[col])
-
     if not fields:
-        cur.close()
         return error("No valid fields to update")
-
     values.append(customer_id)
-    cur.execute(f"UPDATE customers SET {', '.join(fields)} WHERE customer_id = %s", values)
-    mysql.connection.commit()
-    cur.close()
+    db.execute(f"UPDATE customers SET {', '.join(fields)} WHERE customer_id = ?", values)
+    db.commit()
     return success(message="Customer updated successfully")
 
-# ── DELETE /customers/<id> ───────────────────────────────────────────────────
 @customers_bp.route("/<int:customer_id>", methods=["DELETE"])
 def delete_customer(customer_id):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT customer_id FROM customers WHERE customer_id = %s", (customer_id,))
-    if not cur.fetchone():
-        cur.close()
+    db = get_db()
+    if not db.execute("SELECT customer_id FROM customers WHERE customer_id = ?", (customer_id,)).fetchone():
         return error("Customer not found", 404)
-    cur.execute("DELETE FROM customers WHERE customer_id = %s", (customer_id,))
-    mysql.connection.commit()
-    cur.close()
+    db.execute("DELETE FROM customers WHERE customer_id = ?", (customer_id,))
+    db.commit()
     return success(message="Customer deleted successfully")

@@ -1,172 +1,170 @@
-import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis,
-  Tooltip, ResponsiveContainer, CartesianGrid
-} from 'recharts'
-import { TrendingUp, TrendingDown, Users, DollarSign, Target, Activity } from 'lucide-react'
-import { revenueData, conversionData, leads } from '../data/mockData'
-import CustomerCard from '../components/CustomerCard'
-import { customers } from '../data/mockData'
+import { useEffect, useState } from 'react'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import { TrendingUp, Users, DollarSign, Target, Loader2 } from 'lucide-react'
+import { apiFetch } from '../api'
+import { inrShort, inr } from '../utils/inr'
 
-const stats = [
-  { label: 'Total Revenue', value: '$369K', change: '+18.2%', up: true,  icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-  { label: 'Active Leads',  value: '284',   change: '+12.5%', up: true,  icon: Users,      color: 'text-brand-400',   bg: 'bg-brand-500/10' },
-  { label: 'Win Rate',      value: '34%',   change: '-2.1%',  up: false, icon: Target,     color: 'text-violet-400',  bg: 'bg-violet-500/10' },
-  { label: 'Avg Deal Size', value: '$38.4K',change: '+6.8%',  up: true,  icon: Activity,   color: 'text-amber-400',   bg: 'bg-amber-500/10' },
-]
+const STAGES = ['New Lead','Contacted','Demo','Negotiation','Won','Lost']
+const STAGE_COLOR = { 'New Lead':'#64748b','Contacted':'#38bdf8','Demo':'#a78bfa','Negotiation':'#f59e0b','Won':'#34d399','Lost':'#f87171' }
 
-const CustomTooltip = ({ active, payload, label }) => {
+const Tip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
-    <div className="glass-card px-3 py-2.5 text-xs shadow-xl">
-      <p className="text-slate-400 mb-1">{label}</p>
-      {payload.map(p => (
-        <p key={p.name} style={{ color: p.color }} className="font-mono font-semibold">
-          {p.name}: ${p.value.toLocaleString()}
-        </p>
-      ))}
+    <div style={{ background:'rgba(5,8,16,0.95)', border:'1px solid rgba(14,165,233,0.2)', borderRadius:10, padding:'10px 14px', fontSize:12 }}>
+      <p style={{ color:'#64748b', marginBottom:4 }}>{label}</p>
+      {payload.map(p => <p key={p.name} style={{ color:p.color, fontFamily:"'Space Mono',monospace", fontWeight:700 }}>{p.name}: {inrShort(p.value)}</p>)}
     </div>
   )
 }
 
 export default function Dashboard() {
+  const [analytics, setAnalytics] = useState(null)
+  const [leads, setLeads] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    Promise.all([apiFetch('/analytics'), apiFetch('/leads')])
+      .then(([a, l]) => { if (a.ok) setAnalytics(a.data.data); if (l.ok) setLeads(l.data.data || []) })
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'60vh', gap:10, color:'#475569' }}>
+      <Loader2 size={20} style={{ animation:'spin 1s linear infinite' }}/> Loading dashboard…
+    </div>
+  )
+
+  const stats = analytics ? [
+    { label:'Pipeline Value',  value: inrShort(analytics.total_pipeline_value), icon: DollarSign, glow:'rgba(14,165,233,0.3)',  grad:'linear-gradient(135deg,#0ea5e9,#0284c7)' },
+    { label:'Active Leads',    value: analytics.total_leads,                     icon: Users,      glow:'rgba(139,92,246,0.3)',  grad:'linear-gradient(135deg,#8b5cf6,#7c3aed)' },
+    { label:'Won Revenue',     value: inrShort(analytics.won_value),             icon: TrendingUp, glow:'rgba(52,211,153,0.3)',  grad:'linear-gradient(135deg,#10b981,#059669)' },
+    { label:'Win Rate',        value: `${analytics.conversion_rate_pct}%`,       icon: Target,     glow:'rgba(245,158,11,0.3)',  grad:'linear-gradient(135deg,#f59e0b,#d97706)' },
+  ] : []
+
+  const stageData = analytics ? Object.entries(analytics.leads_by_stage||{}).map(([s,c])=>({ stage:s, count:c })) : []
+
+  // Build monthly chart from API or fallback
+  const monthly = (analytics?.monthly_data || []).map(m => ({
+    month: m.month?.slice(0,7) || '',
+    revenue: m.value || 0,
+    target: (m.value || 0) * 1.2,
+  })).reverse()
+
   return (
-    <div className="space-y-6 animate-slide-up">
+    <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end' }}>
         <div>
-          <h1 className="text-2xl font-bold text-white">Good morning, Jake 👋</h1>
-          <p className="text-slate-400 text-sm mt-0.5">Here's what's happening with your pipeline today.</p>
+          <h1 style={{ fontSize:'1.6rem', fontWeight:800, color:'white', letterSpacing:'-0.02em' }}>Dashboard</h1>
+          <p style={{ color:'#475569', fontSize:'0.85rem', marginTop:2 }}>{new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>
         </div>
-        <div className="text-right">
-          <p className="text-xs text-slate-500">March 17, 2026</p>
-          <p className="text-xs text-emerald-400 font-medium mt-0.5">↑ 3 deals closing this week</p>
-        </div>
+        {analytics && <span style={{ fontSize:'0.78rem', color:'#34d399', fontWeight:600 }}>↑ {analytics.deals_won} deals won · {analytics.total_customers} customers</span>}
       </div>
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-4 gap-4">
-        {stats.map(({ label, value, change, up, icon: Icon, color, bg }) => (
-          <div key={label} className="stat-card">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{label}</p>
-              <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center`}>
-                <Icon size={15} className={color} />
+      {/* KPI cards */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
+        {stats.map(({ label, value, icon: Icon, glow, grad }) => (
+          <div key={label} style={{
+            background:'rgba(8,47,73,0.2)', border:'1px solid rgba(14,165,233,0.1)',
+            borderRadius:16, padding:20, transition:'all 0.3s',
+          }}
+            onMouseEnter={e=>{ e.currentTarget.style.borderColor='rgba(14,165,233,0.25)'; e.currentTarget.style.boxShadow=`0 0 24px ${glow}` }}
+            onMouseLeave={e=>{ e.currentTarget.style.borderColor='rgba(14,165,233,0.1)'; e.currentTarget.style.boxShadow='none' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+              <p style={{ fontSize:'0.68rem', fontWeight:700, color:'#475569', textTransform:'uppercase', letterSpacing:'0.08em' }}>{label}</p>
+              <div style={{ width:32, height:32, borderRadius:9, background:grad, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 0 12px ${glow}` }}>
+                <Icon size={14} color="white"/>
               </div>
             </div>
-            <p className="text-2xl font-bold text-white mb-1">{value}</p>
-            <p className={`text-xs font-medium flex items-center gap-1 ${up ? 'text-emerald-400' : 'text-red-400'}`}>
-              {up ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-              {change} vs last month
-            </p>
+            <p style={{ fontSize:'1.6rem', fontWeight:800, color:'white', letterSpacing:'-0.02em', fontFamily:"'Space Mono',monospace" }}>{value}</p>
           </div>
         ))}
       </div>
 
       {/* Charts row */}
-      <div className="grid grid-cols-3 gap-4">
-        {/* Revenue chart */}
-        <div className="glass-card p-5 col-span-2">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="text-sm font-semibold text-white">Revenue vs Target</h2>
-              <p className="text-xs text-slate-500">Last 6 months</p>
-            </div>
-            <div className="flex items-center gap-3 text-xs">
-              <span className="flex items-center gap-1.5 text-slate-400">
-                <span className="w-2 h-2 rounded-full bg-brand-500" /> Revenue
-              </span>
-              <span className="flex items-center gap-1.5 text-slate-400">
-                <span className="w-2 h-2 rounded-full bg-slate-600" /> Target
-              </span>
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={revenueData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="month" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v/1000}k`} />
-              <Tooltip content={<CustomTooltip />} />
-              <Area dataKey="target" stroke="#334155" strokeWidth={1.5} fill="none" strokeDasharray="4 4" dot={false} />
-              <Area dataKey="revenue" stroke="#3b82f6" strokeWidth={2} fill="url(#revGrad)" dot={{ fill: '#3b82f6', r: 3 }} activeDot={{ r: 5 }} />
-            </AreaChart>
-          </ResponsiveContainer>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 320px', gap:14 }}>
+        {/* Revenue area chart */}
+        <div style={{ background:'rgba(8,47,73,0.2)', border:'1px solid rgba(14,165,233,0.1)', borderRadius:16, padding:20 }}>
+          <p style={{ fontSize:'0.85rem', fontWeight:700, color:'white', marginBottom:4 }}>Pipeline Value Over Time</p>
+          <p style={{ fontSize:'0.72rem', color:'#475569', marginBottom:16 }}>Monthly deal value added</p>
+          {monthly.length > 0 ? (
+            <ResponsiveContainer width="100%" height={180}>
+              <AreaChart data={monthly} margin={{ left:-20, right:0, top:0, bottom:0 }}>
+                <defs>
+                  <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.4}/>
+                    <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(14,165,233,0.06)"/>
+                <XAxis dataKey="month" tick={{ fill:'#334155', fontSize:10 }} axisLine={false} tickLine={false}/>
+                <YAxis tick={{ fill:'#334155', fontSize:10 }} axisLine={false} tickLine={false} tickFormatter={inrShort}/>
+                <Tooltip content={<Tip/>}/>
+                <Area dataKey="revenue" stroke="#0ea5e9" strokeWidth={2} fill="url(#g1)" dot={false} name="Revenue"/>
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <div style={{ height:180, display:'flex', alignItems:'center', justifyContent:'center', color:'#334155', fontSize:'0.85rem' }}>Add more leads to see trends</div>
+          )}
         </div>
 
-        {/* Funnel */}
-        <div className="glass-card p-5">
-          <div className="mb-5">
-            <h2 className="text-sm font-semibold text-white">Conversion Funnel</h2>
-            <p className="text-xs text-slate-500">This month</p>
-          </div>
-          <div className="space-y-2.5">
-            {conversionData.map((d, i) => {
-              const pct = Math.round((d.count / conversionData[0].count) * 100)
-              const colors = ['bg-brand-500', 'bg-violet-500', 'bg-indigo-500', 'bg-amber-500', 'bg-emerald-500']
+        {/* Pipeline funnel */}
+        <div style={{ background:'rgba(8,47,73,0.2)', border:'1px solid rgba(14,165,233,0.1)', borderRadius:16, padding:20 }}>
+          <p style={{ fontSize:'0.85rem', fontWeight:700, color:'white', marginBottom:4 }}>Pipeline Stages</p>
+          <p style={{ fontSize:'0.72rem', color:'#475569', marginBottom:16 }}>Live from database</p>
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {stageData.filter(d=>d.count>0).map(d => {
+              const pct = analytics?.total_leads ? Math.round((d.count/analytics.total_leads)*100) : 0
               return (
                 <div key={d.stage}>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-slate-400">{d.stage}</span>
-                    <span className="font-mono text-slate-300">{d.count}</span>
+                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                    <span style={{ fontSize:'0.72rem', color:'#64748b' }}>{d.stage}</span>
+                    <span style={{ fontSize:'0.72rem', color:'#e2e8f0', fontFamily:"'Space Mono',monospace" }}>{d.count}</span>
                   </div>
-                  <div className="h-1.5 bg-slate-800 rounded-full">
-                    <div className={`h-full rounded-full ${colors[i]}`} style={{ width: `${pct}%` }} />
+                  <div style={{ height:5, background:'rgba(14,165,233,0.08)', borderRadius:99, overflow:'hidden' }}>
+                    <div style={{ height:'100%', borderRadius:99, background:STAGE_COLOR[d.stage]||'#38bdf8', width:`${pct}%`, transition:'width 0.8s ease' }}/>
                   </div>
                 </div>
               )
             })}
           </div>
-          <div className="mt-4 pt-4 border-t border-slate-800/60">
-            <p className="text-xs text-slate-500">Overall conversion</p>
-            <p className="text-lg font-bold text-emerald-400 font-mono">6.3%</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent customers */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-white">Key Accounts</h2>
-          <button className="text-xs text-brand-400 hover:text-brand-300 transition-colors">View all →</button>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          {customers.map(c => <CustomerCard key={c.id} customer={c} />)}
-        </div>
-      </div>
-
-      {/* Recent leads mini-table */}
-      <div className="glass-card p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-white">Recent Leads</h2>
-          <button className="text-xs text-brand-400 hover:text-brand-300 transition-colors">View all →</button>
-        </div>
-        <div className="space-y-2">
-          {leads.slice(0, 4).map(lead => (
-            <div key={lead.id} className="flex items-center justify-between py-2 border-b border-slate-800/40 last:border-0">
-              <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-500/40 to-violet-500/40 flex items-center justify-center text-[10px] font-bold text-white">
-                  {lead.name.split(' ').map(n => n[0]).join('')}
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-slate-200">{lead.name}</p>
-                  <p className="text-[10px] text-slate-500">{lead.company}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className="text-xs font-mono text-slate-300">${lead.value.toLocaleString()}</span>
-                <span className={`badge text-[10px] ${lead.status === 'hot' ? 'bg-red-500/15 text-red-400' : lead.status === 'warm' ? 'bg-amber-500/15 text-amber-400' : 'bg-slate-500/15 text-slate-400'}`}>
-                  {lead.status}
-                </span>
-              </div>
+          {analytics && (
+            <div style={{ marginTop:16, paddingTop:16, borderTop:'1px solid rgba(14,165,233,0.08)' }}>
+              <p style={{ fontSize:'0.68rem', color:'#475569' }}>Win Rate</p>
+              <p style={{ fontSize:'1.4rem', fontWeight:800, color:'#34d399', fontFamily:"'Space Mono',monospace" }}>{analytics.conversion_rate_pct}%</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
+
+      {/* Recent leads table */}
+      <div style={{ background:'rgba(8,47,73,0.2)', border:'1px solid rgba(14,165,233,0.1)', borderRadius:16, overflow:'hidden' }}>
+        <div style={{ padding:'16px 20px', borderBottom:'1px solid rgba(14,165,233,0.08)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <p style={{ fontSize:'0.85rem', fontWeight:700, color:'white' }}>Recent Leads</p>
+          <a href="/leads" style={{ fontSize:'0.72rem', color:'#38bdf8', textDecoration:'none', fontWeight:600 }}>View all →</a>
+        </div>
+        {leads.slice(0,5).map((l,i) => (
+          <div key={l.id} style={{
+            display:'flex', alignItems:'center', gap:14, padding:'12px 20px',
+            borderBottom: i<4 ? '1px solid rgba(14,165,233,0.05)' : 'none',
+            transition:'background 0.15s',
+          }}
+            onMouseEnter={e=>e.currentTarget.style.background='rgba(14,165,233,0.04)'}
+            onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+            <div style={{ width:32, height:32, borderRadius:9, background:'linear-gradient(135deg,rgba(14,165,233,0.3),rgba(139,92,246,0.3))', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.7rem', fontWeight:800, color:'white', flexShrink:0 }}>
+              {l.name?.split(' ').map(n=>n[0]).join('')}
+            </div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <p style={{ fontSize:'0.83rem', fontWeight:600, color:'#e2e8f0', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{l.name}</p>
+              <p style={{ fontSize:'0.7rem', color:'#475569' }}>{l.company||l.email}</p>
+            </div>
+            <span style={{ fontSize:'0.72rem', fontFamily:"'Space Mono',monospace", color:'#7dd3fc', fontWeight:700 }}>{inrShort(l.value)}</span>
+            <span style={{ fontSize:'0.65rem', padding:'2px 8px', borderRadius:99, background:'rgba(14,165,233,0.1)', border:'1px solid rgba(14,165,233,0.2)', color:'#38bdf8', fontWeight:600, whiteSpace:'nowrap' }}>{l.status}</span>
+          </div>
+        ))}
+        {leads.length===0 && <p style={{ textAlign:'center', padding:32, color:'#334155', fontSize:'0.85rem' }}>No leads yet — add some!</p>}
+      </div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 }

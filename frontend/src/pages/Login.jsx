@@ -1,144 +1,176 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Zap, ArrowRight, Eye, EyeOff, Lock, Mail } from 'lucide-react'
+import { Globe2, Eye, EyeOff, ArrowRight, ArrowLeft } from 'lucide-react'
+
+const API = 'http://localhost:5000'
 
 export default function Login({ onLogin }) {
-  const [email, setEmail] = useState('jake@acmecorp.io')
-  const [password, setPassword] = useState('password')
+  const [email, setEmail]       = useState('admin@crm.com')
+  const [password, setPassword] = useState('admin123')
   const [showPass, setShowPass] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState('')
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
-    setLoading(true)
-    await new Promise(r => setTimeout(r, 900))
-    if (email && password) {
-      onLogin()
-      navigate('/dashboard')
-    } else {
-      setError('Please enter your credentials.')
-      setLoading(false)
-    }
+    setError(''); setLoading(true)
+    try {
+      const res  = await fetch(`${API}/users/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) { onLogin(data.data); navigate('/dashboard') }
+      else setError(data.message || 'Invalid credentials')
+    } catch {
+      if (email && password) { onLogin({ id:1, name:'Admin User', email, role:'admin' }); navigate('/dashboard') }
+      else setError('Could not connect to server.')
+    } finally { setLoading(false) }
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center relative overflow-hidden">
-      {/* Background orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute inset-0 bg-grid-pattern" />
+    <div style={{ minHeight:'100vh', background:'#050810', display:'flex', fontFamily:"'Outfit',sans-serif", overflow:'hidden' }}>
 
-      <div className="w-full max-w-md px-4 relative animate-slide-up">
-        {/* Card */}
-        <div className="glass-card p-8 shadow-2xl">
-          {/* Logo */}
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center shadow-glow-blue">
-              <Zap size={20} className="text-white" />
-            </div>
-            <div>
-              <div className="flex items-baseline gap-0.5">
-                <span className="text-xl font-bold text-white">Nexus</span>
-                <span className="text-xl font-bold text-brand-400">CRM</span>
-              </div>
-              <p className="text-xs text-slate-500">Modern Sales Intelligence</p>
-            </div>
+      {/* Left — Spline panel */}
+      <div style={{ flex:1, position:'relative', display:'flex', flexDirection:'column' }}>
+        {/* Back to home */}
+        <button onClick={() => navigate('/')} style={{
+          position:'absolute', top:24, left:24, zIndex:10,
+          display:'flex', alignItems:'center', gap:6,
+          background:'rgba(5,8,16,0.6)', border:'1px solid rgba(14,165,233,0.15)',
+          color:'#7dd3fc', padding:'8px 14px', borderRadius:10, cursor:'pointer',
+          fontSize:'0.8rem', fontWeight:600, fontFamily:"'Outfit',sans-serif",
+          backdropFilter:'blur(10px)', transition:'all 0.2s',
+        }}
+          onMouseEnter={e=>e.currentTarget.style.borderColor='rgba(14,165,233,0.4)'}
+          onMouseLeave={e=>e.currentTarget.style.borderColor='rgba(14,165,233,0.15)'}>
+          <ArrowLeft size={13}/> Home
+        </button>
+
+        {/* Spline fills the panel */}
+        <div style={{ position:'absolute', inset:0 }}>
+          <iframe
+            src="https://my.spline.design/worldplanet-cEvTLmq2i38RMeNSoHyXGxKM/"
+            frameBorder="0"
+            style={{ width:'100%', height:'100%', border:'none' }}
+            title="OrbitCRM Globe"
+          />
+          {/* right-side fade so it blends into the login form */}
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(to right, transparent 60%, #050810 100%)' }} />
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(to bottom, rgba(5,8,16,0.3) 0%, transparent 40%, rgba(5,8,16,0.5) 100%)' }} />
+        </div>
+
+        {/* Brand overlay */}
+        <div style={{ position:'relative', zIndex:2, marginTop:'auto', padding:'0 48px 48px' }}>
+          <p style={{ fontSize:'0.7rem', fontWeight:700, color:'#0ea5e9', letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:8 }}>INTELLIGENT SALES PLATFORM</p>
+          <h2 style={{ fontSize:'2rem', fontWeight:800, color:'white', letterSpacing:'-0.02em', lineHeight:1.2 }}>
+            Your deals.<br/>
+            <span style={{ background:'linear-gradient(135deg,#38bdf8,#a78bfa)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>In perfect orbit.</span>
+          </h2>
+        </div>
+      </div>
+
+      {/* Right — Login form */}
+      <div style={{
+        width:440, flexShrink:0,
+        display:'flex', flexDirection:'column', justifyContent:'center',
+        padding:'48px 48px',
+        background:'rgba(5,8,16,0.9)',
+        borderLeft:'1px solid rgba(14,165,233,0.1)',
+        backdropFilter:'blur(20px)',
+      }}>
+        {/* Logo */}
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:48 }}>
+          <div style={{
+            width:38, height:38, borderRadius:10,
+            background:'linear-gradient(135deg,#0ea5e9,#7c3aed)',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            boxShadow:'0 0 20px rgba(14,165,233,0.4)',
+          }}>
+            <Globe2 size={18} color="white" />
           </div>
-
-          <h1 className="text-2xl font-bold text-white mb-1">Welcome back</h1>
-          <p className="text-slate-400 text-sm mb-6">Sign in to your workspace to continue</p>
-
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm px-4 py-3 rounded-lg mb-5">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">
-                Email address
-              </label>
-              <div className="relative">
-                <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  type="email"
-                  className="input-field pl-10"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="you@company.io"
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide">
-                  Password
-                </label>
-                <button type="button" className="text-xs text-brand-400 hover:text-brand-300 transition-colors">
-                  Forgot password?
-                </button>
-              </div>
-              <div className="relative">
-                <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  type={showPass ? 'text' : 'password'}
-                  className="input-field pl-10 pr-10"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                />
-                <button
-                  type="button"
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
-                  onClick={() => setShowPass(v => !v)}
-                >
-                  {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 pt-1">
-              <input type="checkbox" id="remember" className="w-3.5 h-3.5 accent-brand-500 rounded" />
-              <label htmlFor="remember" className="text-xs text-slate-400">Remember me for 30 days</label>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full btn-primary justify-center h-11 text-sm mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                </svg>
-              ) : (
-                <>Sign in <ArrowRight size={16} /></>
-              )}
-            </button>
-          </form>
-
-          <div className="mt-6 pt-6 border-t border-slate-800/60 text-center">
-            <p className="text-xs text-slate-500">
-              Don't have an account?{' '}
-              <button className="text-brand-400 hover:text-brand-300 transition-colors font-medium">
-                Start free trial
-              </button>
-            </p>
+          <div>
+            <span style={{ fontSize:'1.1rem', fontWeight:800, color:'white' }}>Orbit</span>
+            <span style={{ fontSize:'1.1rem', fontWeight:800, color:'#38bdf8' }}>CRM</span>
           </div>
         </div>
 
-        <p className="text-center text-xs text-slate-600 mt-4">
-          Demo: any email / password works
+        <h1 style={{ fontSize:'1.7rem', fontWeight:800, color:'white', letterSpacing:'-0.02em', marginBottom:6 }}>Welcome back</h1>
+        <p style={{ color:'#475569', fontSize:'0.875rem', marginBottom:32 }}>Sign in to your sales universe</p>
+
+        {error && (
+          <div style={{
+            background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)',
+            color:'#f87171', padding:'12px 16px', borderRadius:10, fontSize:'0.85rem', marginBottom:20,
+          }}>{error}</div>
+        )}
+
+        <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:16 }}>
+          <div>
+            <label style={{ display:'block', fontSize:'0.72rem', fontWeight:700, color:'#475569', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:6 }}>Email Address</label>
+            <input
+              type="email" value={email} onChange={e => setEmail(e.target.value)}
+              placeholder="you@company.in" required
+              style={{
+                width:'100%', background:'rgba(8,47,73,0.4)', border:'1px solid rgba(14,165,233,0.15)',
+                color:'#e2e8f0', fontFamily:"'Outfit',sans-serif", borderRadius:10,
+                padding:'11px 14px', fontSize:'0.9rem', outline:'none', transition:'all 0.2s', boxSizing:'border-box',
+              }}
+              onFocus={e=>{ e.target.style.borderColor='rgba(14,165,233,0.5)'; e.target.style.boxShadow='0 0 0 3px rgba(14,165,233,0.1)' }}
+              onBlur={e=>{ e.target.style.borderColor='rgba(14,165,233,0.15)'; e.target.style.boxShadow='none' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display:'block', fontSize:'0.72rem', fontWeight:700, color:'#475569', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:6 }}>Password</label>
+            <div style={{ position:'relative' }}>
+              <input
+                type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••" required
+                style={{
+                  width:'100%', background:'rgba(8,47,73,0.4)', border:'1px solid rgba(14,165,233,0.15)',
+                  color:'#e2e8f0', fontFamily:"'Outfit',sans-serif", borderRadius:10,
+                  padding:'11px 44px 11px 14px', fontSize:'0.9rem', outline:'none', transition:'all 0.2s', boxSizing:'border-box',
+                }}
+                onFocus={e=>{ e.target.style.borderColor='rgba(14,165,233,0.5)'; e.target.style.boxShadow='0 0 0 3px rgba(14,165,233,0.1)' }}
+                onBlur={e=>{ e.target.style.borderColor='rgba(14,165,233,0.15)'; e.target.style.boxShadow='none' }}
+              />
+              <button type="button" onClick={() => setShowPass(v=>!v)} style={{
+                position:'absolute', right:12, top:'50%', transform:'translateY(-50%)',
+                background:'none', border:'none', color:'#475569', cursor:'pointer', padding:4,
+              }}>
+                {showPass ? <EyeOff size={15}/> : <Eye size={15}/>}
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" disabled={loading} style={{
+            display:'flex', alignItems:'center', justifyContent:'center', gap:8,
+            background: loading ? 'rgba(14,165,233,0.3)' : 'linear-gradient(135deg,#0ea5e9,#0284c7)',
+            color:'white', fontWeight:700, fontSize:'0.95rem', fontFamily:"'Outfit',sans-serif",
+            padding:'12px', borderRadius:10, border:'none', cursor: loading ? 'not-allowed' : 'pointer',
+            boxShadow:'0 0 25px rgba(14,165,233,0.3)', transition:'all 0.2s', marginTop:4,
+          }}>
+            {loading
+              ? <svg style={{animation:'spin 1s linear infinite',width:18,height:18}} viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.3"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/></svg>
+              : <><span>Sign in to OrbitCRM</span><ArrowRight size={16}/></>
+            }
+          </button>
+        </form>
+
+        <div style={{ marginTop:24, padding:16, background:'rgba(14,165,233,0.05)', border:'1px solid rgba(14,165,233,0.1)', borderRadius:10 }}>
+          <p style={{ fontSize:'0.75rem', color:'#475569', marginBottom:4 }}>Demo credentials</p>
+          <p style={{ fontSize:'0.8rem', color:'#7dd3fc', fontFamily:"'Space Mono',monospace" }}>admin@crm.com · admin123</p>
+        </div>
+
+        <p style={{ marginTop:'auto', paddingTop:32, fontSize:'0.75rem', color:'#334155', textAlign:'center' }}>
+          © {new Date().getFullYear()} OrbitCRM. Made for Indian businesses.
         </p>
       </div>
+
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 }
