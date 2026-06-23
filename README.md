@@ -1,156 +1,201 @@
-# 🚀 NexusCRM — Full Stack CRM System (Enhanced)
+<div align="center">
 
-A modern, full-stack **Customer Relationship Management (CRM)** application built with a **React frontend and Flask backend**, designed for seamless lead tracking, customer management, and sales pipeline visualization.
+<img src="https://img.shields.io/badge/OrbitCRM-v2-00CFFF?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIGZpbGw9IiMwMENGRkYiLz48L3N2Zz4=" alt="OrbitCRM"/>
 
-⚡ **Zero-setup backend** — uses SQLite (auto-created on first run), eliminating the need for MySQL or XAMPP.
+# 🪐 OrbitCRM
+
+### *Your Sales Universe, In Perfect Orbit.*
+
+**A full-stack CRM built for ambitious Indian businesses — track leads, close deals, grow revenue.**
+
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-vercel-black?style=for-the-badge)](https://crm-1g8qoezre-pranithas-projects-c22e83ad.vercel.app/)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github)](https://github.com/pranithamalasala/crm)
+[![Made for India](https://img.shields.io/badge/Made_for-Indian_Businesses-FF9933?style=for-the-badge)]()
+[![Zero Setup](https://img.shields.io/badge/Setup_Cost-₹0-00C851?style=for-the-badge)]()
+
+</div>
 
 ---
 
-## 👥 Contributors
+## 📸 Preview
 
-| Name              | GitHub            | Role                   |
-| ----------------- | ----------------- | ---------------------- |
-| **Pranitha**      | @pranithamalasala | Frontend & Integration |
-| **Sushant Bhatt** | @sushantbhatt17   | Backend & Database     |
+| Landing Page | Login | Analytics Dashboard |
+|:-----------:|:-----:|:-------------------:|
+| ![Landing](./screenshots/landing.png) | ![Login](./screenshots/login.png) | ![Analytics](./screenshots/analytics.png) |
+
+> **Demo credentials:** `admin@crm.com` / `admin123`
+
+---
+
+## ✨ Features
+
+| Module | What it does |
+|--------|-------------|
+| 🔐 **Auth** | Secure login with persistent session via `sessionStorage` |
+| 📊 **Analytics** | Live KPI dashboard — pipeline value, win rate, revenue, charts |
+| 👥 **Leads** | Full CRUD, filtering, sorting, CSV export |
+| 🗂 **Pipeline** | Kanban board with drag-and-drop stage transitions |
+| 👤 **Customers** | Customer profiles with activity timeline |
+| 📝 **Activities** | Log calls, emails, meetings with timestamps |
+| 📱 **UI** | Fully responsive dark-theme interface |
 
 ---
 
 ## 🚀 Quick Start
 
-### 🔹 Backend (Terminal 1)
+### Prerequisites
+- **Python 3.8+** and **Node.js 18+**
 
+### 1. Clone the repo
+```bash
+git clone https://github.com/pranithamalasala/crm.git
+cd crm
+```
+
+### 2. Start the Backend
 ```bash
 cd backend
 pip install -r requirements.txt
 python run.py
 ```
+> Runs at **http://localhost:5000**
+> SQLite database (`crm.db`) is **auto-created** with seed data on first run — no MySQL or XAMPP needed.
 
-Runs at: **http://localhost:5000**
-📌 Database (`crm.db`) is created automatically with seed data.
-
----
-
-### 🔹 Frontend (Terminal 2)
-
+### 3. Start the Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+> Runs at **http://localhost:5173**
 
-Runs at: **http://localhost:5173**
-
----
-
-### 🔐 Demo Login
-
-| Email                                 | Password |
-| ------------------------------------- | -------- |
-| [admin@crm.com](mailto:admin@crm.com) | admin123 |
+### 4. Login
+| Email | Password |
+|-------|----------|
+| `admin@crm.com` | `admin123` |
 
 ---
 
-## ✨ Key Features
+## 🏗 Tech Stack
 
-* 🔐 Authentication system with persistent session
-* 📊 Live analytics dashboard (charts + KPIs)
-* 👥 Lead management (CRUD, filtering, sorting, CSV export)
-* 🗂 Sales pipeline with Kanban board & stage transitions
-* 👤 Customer profiles with activity timeline
-* 📝 Activity logging system
-* 📱 Fully responsive modern UI (dark theme)
+### Frontend
+- **React 18** + **Vite** — fast, modern build tooling
+- **Tailwind CSS** — utility-first styling
+- **React Router v6** — client-side routing
+- **Recharts** — beautiful data visualizations
+- **Lucide React** — icon system
 
----
+### Backend
+- **Flask 3** — lightweight Python web framework
+- **flask-cors** — cross-origin resource sharing
+- **bcrypt** — password hashing
+- **python-dotenv** — environment config
 
-## 🔌 API Overview
-
-| Method | Endpoint          | Description             |
-| ------ | ----------------- | ----------------------- |
-| POST   | `/users/login`    | User login              |
-| GET    | `/leads`          | Fetch leads             |
-| POST   | `/leads`          | Create lead             |
-| PUT    | `/leads/:id`      | Update lead             |
-| DELETE | `/leads/:id`      | Delete lead             |
-| GET    | `/pipeline/board` | Pipeline board          |
-| POST   | `/pipeline/move`  | Move lead across stages |
-| GET    | `/customers`      | Fetch customers         |
-| PUT    | `/customers/:id`  | Update customer         |
-| DELETE | `/customers/:id`  | Delete customer         |
-| GET    | `/activities`     | Activity logs           |
-| POST   | `/activities`     | Create activity         |
-| GET    | `/analytics`      | Dashboard analytics     |
+### Database
+- **SQLite** — zero-setup, file-based, auto-managed (`crm.db`)
 
 ---
 
-## 🧱 Tech Stack
+## 🔌 API Reference
 
-**Frontend**
-
-* React 18 + Vite
-* Tailwind CSS
-* React Router v6
-* Recharts
-* Lucide React
-
-**Backend**
-
-* Flask 3
-* flask-cors
-* python-dotenv
-* bcrypt
-
-**Database**
-
-* SQLite (auto-managed, no external setup)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/users/login` | Authenticate user |
+| `GET` | `/leads` | Fetch all leads |
+| `POST` | `/leads` | Create a new lead |
+| `PUT` | `/leads/:id` | Update a lead |
+| `DELETE` | `/leads/:id` | Delete a lead |
+| `GET` | `/pipeline/board` | Get pipeline board view |
+| `POST` | `/pipeline/move` | Move lead between stages |
+| `GET` | `/customers` | Fetch all customers |
+| `PUT` | `/customers/:id` | Update a customer |
+| `DELETE` | `/customers/:id` | Delete a customer |
+| `GET` | `/activities` | Fetch activity logs |
+| `POST` | `/activities` | Log a new activity |
+| `GET` | `/analytics` | Dashboard analytics data |
 
 ---
 
-## 🛠 Improvements & Fixes
+## 📁 Project Structure
 
-### 🔹 Backend Enhancements
-
-* Replaced MySQL + XAMPP with **SQLite (zero setup)**
-* Removed Flask-MySQLdb dependency
-* Implemented `/users/login` authentication endpoint
-* Refactored SQL schema for SQLite compatibility
-* Added analytics metrics (revenue, pipeline value, trends)
-* Fixed missing dependencies (bcrypt)
-
-### 🔹 Frontend Enhancements
-
-* Converted static UI into **fully dynamic data-driven app**
-* Implemented real API integration across all pages
-* Added Analytics & Customers modules
-* Enabled full CRUD (Create, Edit, Delete) functionality
-* Implemented pipeline stage transitions
-* Added CSV export for leads
-* Fixed authentication persistence using sessionStorage
-* Added activity logging system
-
----
-
-
-
-## 🎯 What This Project Demonstrates
-
-* End-to-end full-stack development
-* REST API design with Flask
-* Dynamic UI with React
-* State management & routing
-* Data visualization with charts
-* Clean modular architecture
+```
+crm/
+├── backend/
+│   ├── app/
+│   │   ├── routes/          # leads, customers, pipeline, analytics...
+│   │   └── models/          # DB schema & queries
+│   ├── crm.db               # SQLite DB (auto-generated)
+│   ├── requirements.txt
+│   └── run.py
+├── frontend/
+│   ├── src/
+│   │   ├── components/      # Reusable UI components
+│   │   ├── pages/           # Dashboard, Leads, Pipeline, Analytics...
+│   │   └── api/             # API client functions
+│   ├── package.json
+│   └── vite.config.js
+└── README.md
+```
 
 ---
 
-## 🚧 Future Improvements
+## 👥 Contributors
 
-* JWT-based authentication
-* Role-based access control
-* Cloud deployment (AWS / Vercel / Docker)
-* Real-time notifications
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/pranithamalasala">
+        <b>Pranitha</b><br/>
+        <sub>Frontend & Integration</sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/sushantbhatt17">
+        <b>Sushant Bhatt</b><br/>
+        <sub>Backend & Database</sub>
+      </a>
+    </td>
+  </tr>
+</table>
 
 ---
 
-## ⭐ Support
+## 🗺 Roadmap
 
-If you found this project useful, consider giving it a ⭐ on GitHub!
+- [ ] JWT-based authentication
+- [ ] Role-based access control (Admin / Sales Rep)
+- [ ] Email notifications & reminders
+- [ ] Real-time activity updates
+- [ ] Cloud deployment guide (Docker / AWS)
+- [ ] Mobile app (React Native)
+
+---
+
+## 🤝 Contributing
+
+Pull requests are welcome! For major changes, please open an issue first to discuss what you'd like to change.
+
+```bash
+# Fork → Clone → Branch → Commit → Push → PR
+git checkout -b feature/your-feature-name
+git commit -m "feat: add your feature"
+git push origin feature/your-feature-name
+```
+
+---
+
+## 📄 License
+
+This project is open-source and available under the [MIT License](LICENSE).
+
+---
+
+<div align="center">
+
+**Built with ❤️ for Indian Sales Teams**
+
+⭐ Star this repo if you found it useful!
+
+[![Stars](https://img.shields.io/github/stars/pranithamalasala/crm?style=social)](https://github.com/pranithamalasala/crm)
+
+</div>
