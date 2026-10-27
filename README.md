@@ -1,4 +1,4 @@
- <div align="center">
+** <div align="center">
 
 <img src="https://img.shields.io/badge/OrbitCRM-v2-00CFFF?style=for-the-badge" alt="OrbitCRM"/>
 
@@ -242,3 +242,4 @@ This project is open-source and available under the [MIT License](LICENSE).
 [![Stars](https://img.shields.io/github/stars/pranithamalasala/crm?style=social)](https://github.com/pranithamalasala/crm)
 
 </div>
+**
