@@ -1,6 +1,6 @@
-<div align="center">
+ <div align="center">
 
-<img src="https://img.shields.io/badge/OrbitCRM-v2-00CFFF?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIGZpbGw9IiMwMENGRkYiLz48L3N2Zz4=" alt="OrbitCRM"/>
+<img src="https://img.shields.io/badge/OrbitCRM-v2-00CFFF?style=for-the-badge" alt="OrbitCRM"/>
 
 # 🪐 OrbitCRM
 
@@ -8,10 +8,10 @@
 
 **A full-stack CRM built for ambitious Indian businesses — track leads, close deals, grow revenue.**
 
-[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-vercel-black?style=for-the-badge)](https://crm-1g8qoezre-pranithas-projects-c22e83ad.vercel.app/)
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Vercel-black?style=for-the-badge)](https://crm-bay-nu.vercel.app/)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github)](https://github.com/pranithamalasala/crm)
 [![Made for India](https://img.shields.io/badge/Made_for-Indian_Businesses-FF9933?style=for-the-badge)]()
-[![Zero Setup](https://img.shields.io/badge/Setup_Cost-₹0-00C851?style=for-the-badge)]()
+[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker)]()
 
 </div>
 
@@ -20,7 +20,7 @@
 ## 📸 Preview
 
 | Landing Page | Login | Analytics Dashboard |
-|:-----------:|:-----:|:-------------------:|
+|:---:|:---:|:---:|
 | ![Landing](./screenshots/landing.png) | ![Login](./screenshots/login.png) | ![Analytics](./screenshots/analytics.png) |
 
 > **Demo credentials:** `admin@crm.com` / `admin123`
@@ -30,7 +30,7 @@
 ## ✨ Features
 
 | Module | What it does |
-|--------|-------------|
+|---|---|
 | 🔐 **Auth** | Secure login with persistent session via `sessionStorage` |
 | 📊 **Analytics** | Live KPI dashboard — pipeline value, win rate, revenue, charts |
 | 👥 **Leads** | Full CRUD, filtering, sorting, CSV export |
@@ -38,40 +38,69 @@
 | 👤 **Customers** | Customer profiles with activity timeline |
 | 📝 **Activities** | Log calls, emails, meetings with timestamps |
 | 📱 **UI** | Fully responsive dark-theme interface |
+| 🐳 **Docker** | Containerized frontend and backend using Docker Compose |
 
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Python 3.8+** and **Node.js 18+**
 
-### 1. Clone the repo
+- **Python 3.8+**
+- **Node.js 18+**
+- **Docker Desktop** (optional, for containerized setup)
+
+### 1. Clone the repository
+
 ```bash
 git clone https://github.com/pranithamalasala/crm.git
 cd crm
 ```
 
-### 2. Start the Backend
+### 2. Run with Docker
+
+```bash
+docker compose up --build -d
+```
+
+Open the frontend at **http://localhost:5173**.
+
+The Flask backend runs at **http://localhost:10000**.
+
+To stop the containers:
+
+```bash
+docker compose down
+```
+
+### 3. Run manually
+
+#### Start the backend
+
 ```bash
 cd backend
 pip install -r requirements.txt
 python run.py
 ```
-> Runs at **http://localhost:5000**
-> SQLite database (`crm.db`) is **auto-created** with seed data on first run — no MySQL or XAMPP needed.
 
-### 3. Start the Frontend
+#### Start the frontend
+
+Open another terminal:
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-> Runs at **http://localhost:5173**
+
+Open **http://localhost:5173**.
+
+> The backend port depends on your environment configuration. The Docker setup uses port `10000`.
 
 ### 4. Login
+
 | Email | Password |
-|-------|----------|
+|---|---|
 | `admin@crm.com` | `admin123` |
 
 ---
@@ -79,27 +108,36 @@ npm run dev
 ## 🏗 Tech Stack
 
 ### Frontend
-- **React 18** + **Vite** — fast, modern build tooling
+
+- **React 18** + **Vite** — modern frontend tooling
 - **Tailwind CSS** — utility-first styling
 - **React Router v6** — client-side routing
-- **Recharts** — beautiful data visualizations
+- **Recharts** — data visualizations
 - **Lucide React** — icon system
 
 ### Backend
-- **Flask 3** — lightweight Python web framework
+
+- **Flask 3** — Python web framework
 - **flask-cors** — cross-origin resource sharing
 - **bcrypt** — password hashing
-- **python-dotenv** — environment config
+- **python-dotenv** — environment configuration
 
 ### Database
-- **SQLite** — zero-setup, file-based, auto-managed (`crm.db`)
+
+- **SQLite** — file-based database (`crm.db`)
+
+### DevOps
+
+- **Docker** — containerization
+- **Docker Compose** — multi-container orchestration
+- **Vercel** — frontend deployment
 
 ---
 
 ## 🔌 API Reference
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
+|---|---|---|
 | `POST` | `/users/login` | Authenticate user |
 | `GET` | `/leads` | Fetch all leads |
 | `POST` | `/leads` | Create a new lead |
@@ -118,22 +156,27 @@ npm run dev
 
 ## 📁 Project Structure
 
-```
+```text
 crm/
 ├── backend/
 │   ├── app/
-│   │   ├── routes/          # leads, customers, pipeline, analytics...
-│   │   └── models/          # DB schema & queries
-│   ├── crm.db               # SQLite DB (auto-generated)
+│   │   ├── routes/
+│   │   └── models/
+│   ├── migrations/
+│   ├── Dockerfile
+│   ├── .dockerignore
 │   ├── requirements.txt
 │   └── run.py
 ├── frontend/
 │   ├── src/
-│   │   ├── components/      # Reusable UI components
-│   │   ├── pages/           # Dashboard, Leads, Pipeline, Analytics...
-│   │   └── api/             # API client functions
-│   ├── package.json
-│   └── vite.config.js
+│   │   ├── components/
+│   │   ├── pages/
+│   │   └── api/
+│   ├── Dockerfile
+│   ├── .dockerignore
+│   └── package.json
+├── docker-compose.yml
+├── screenshots/
 └── README.md
 ```
 
@@ -164,8 +207,9 @@ crm/
 
 - [ ] JWT-based authentication
 - [ ] Role-based access control (Admin / Sales Rep)
-- [ ] Email notifications & reminders
+- [ ] Email notifications and reminders
 - [ ] Real-time activity updates
+- [ ] Persistent cloud database
 - [ ] Cloud deployment guide (Docker / AWS)
 - [ ] Mobile app (React Native)
 
@@ -176,7 +220,6 @@ crm/
 Pull requests are welcome! For major changes, please open an issue first to discuss what you'd like to change.
 
 ```bash
-# Fork → Clone → Branch → Commit → Push → PR
 git checkout -b feature/your-feature-name
 git commit -m "feat: add your feature"
 git push origin feature/your-feature-name
