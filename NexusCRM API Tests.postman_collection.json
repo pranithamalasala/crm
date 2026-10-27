@@ -1,0 +1,628 @@
+{
+  "info": {
+    "_postman_id": "1ccd99be-b969-4a17-8718-364fc6cbcb1e",
+    "name": "NexusCRM API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "48324301"
+  },
+  "item": [
+    {
+      "name": "Get Analytics",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"Response time is under 500 ms\", function () {\n    pm.expect(pm.response.responseTime).to.be.below(500);\n});\n\npm.test(\"Response is valid JSON\", function () {\n    pm.response.to.be.json;\n});\n\npm.test(\"API returns success\", function () {\n    const data = pm.response.json();\n    pm.expect(data.success).to.eql(true);\n});\n\npm.test(\"Analytics contains required fields\", function () {\n    const data = pm.response.json().data;\n\n    pm.expect(data).to.have.property(\"total_leads\");\n    pm.expect(data.total_leads).to.be.a(\"number\");\n\n    pm.expect(data).to.have.property(\"total_customers\");\n    pm.expect(data.total_customers).to.be.a(\"number\");\n\n    pm.expect(data.leads_by_stage).to.be.an(\"object\");\n});\n\npm.test(\"Analytics numeric values are valid\", function () {\n    const data = pm.response.json().data;\n\n    pm.expect(data.total_pipeline_value).to.be.a(\"number\");\n    pm.expect(data.conversion_rate_pct).to.be.a(\"number\");\n    pm.expect(data.won_value).to.be.a(\"number\");\n\n    pm.expect(data.total_pipeline_value).to.be.at.least(0);\n    pm.expect(data.conversion_rate_pct).to.be.within(0, 100);\n    pm.expect(data.won_value).to.be.at.least(0);\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:10000/analytics",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "10000",
+          "path": [
+            "analytics"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Leads",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Response is valid JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"API returns success\", function () {\r\n    const data = pm.response.json();\r\n    pm.expect(data.success).to.eql(true);\r\n});\r\n\r\npm.test(\"Leads data is an array\", function () {\r\n    const data = pm.response.json().data;\r\n    pm.expect(data).to.be.an(\"array\");\r\n});\r\n\r\npm.test(\"Each lead has required fields\", function () {\r\n    const leads = pm.response.json().data;\r\n\r\n    if (leads.length > 0) {\r\n        pm.expect(leads[0]).to.have.property(\"id\");\r\n        pm.expect(leads[0]).to.have.property(\"name\");\r\n        pm.expect(leads[0]).to.have.property(\"email\");\r\n        pm.expect(leads[0]).to.have.property(\"status\");\r\n    }\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:10000/leads",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "10000",
+          "path": [
+            "leads"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "http://127.0.0.1:10000/customers",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {\n    pm.response.to.have.status(201);\n});\n\npm.test(\"Customer created successfully\", function () {\n    const jsonData = pm.response.json();\n\n    pm.expect(jsonData.success).to.be.true;\n    pm.expect(jsonData).to.have.property(\"message\", \"Customer created successfully\");\n    pm.expect(jsonData.data).to.have.property(\"customer_id\");\n});"
+            ]
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set(\"customerEmail\", `postman.${Date.now()}@example.com`);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Postman Test Customer\",\r\n  \"email\": \"{{customerEmail}}\",\r\n  \"phone\": \"9876543210\",\r\n  \"company\": \"Test Company\",\r\n  \"notes\": \"Created during API testing\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:10000/customers",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "10000",
+          "path": [
+            "customers"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "http://127.0.0.1:10000/customers/13",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response is valid JSON\", function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "pm.test(\"Customer data returned\", function () {",
+              "    const d = pm.response.json();",
+              "    pm.expect(d.success).to.be.true;",
+              "    pm.expect(d.data).to.have.property(\"customer_id\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:10000/customers/25",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "10000",
+          "path": [
+            "customers",
+            "25"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Lead",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {\n    pm.response.to.have.status(201);\n});\n\npm.test(\"Response is valid JSON\", function () {\n    pm.response.to.be.json;\n});\n\npm.test(\"Lead created successfully\", function () {\n    const d = pm.response.json();\n    pm.expect(d.success).to.be.true;\n    pm.expect(d.data).to.have.property(\"id\");\n    pm.collectionVariables.set(\"createdLeadId\", d.data.id);\n});"
+            ]
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set(\"leadEmail\", `lead.${Date.now()}@example.com`);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Postman Test Lead\",\r\n  \"email\": \"{{leadEmail}}\",\r\n  \"company\": \"Test Company\",\r\n  \"source\": \"Website\",\r\n  \"value\": 15000\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:10000/leads",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "10000",
+          "path": [
+            "leads"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Lead",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"Response is valid JSON\", function () {\n    pm.response.to.be.json;\n});\n\npm.test(\"Lead updated successfully\", function () {\n    const data = pm.response.json();\n    pm.expect(data.success).to.be.true;\n    pm.expect(data.message).to.eql(\"Lead updated successfully\");\n});"
+            ]
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Fall back to a known seeded lead if createdLeadId was not set this run\nconst leadId = pm.collectionVariables.get(\"createdLeadId\");\nif (!leadId || leadId === \"\") {\n    pm.collectionVariables.set(\"createdLeadId\", \"2\");\n}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Updated Postman Lead\",\r\n  \"email\": \"updatedlead@example.com\",\r\n  \"company\": \"Updated Test Company\",\r\n  \"stage\": \"Qualified\",\r\n  \"value\": 7500\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:10000/leads/{{createdLeadId}}",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "10000",
+          "path": [
+            "leads",
+            "{{createdLeadId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Lead by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"Response is valid JSON\", function () {\n    pm.response.to.be.json;\n});\n\npm.test(\"Lead data returned\", function () {\n    const data = pm.response.json();\n    pm.expect(data.success).to.be.true;\n    pm.expect(data.data).to.have.property(\"id\");\n    pm.expect(data.data).to.have.property(\"name\");\n    pm.expect(data.data).to.have.property(\"email\");\n});"
+            ]
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Fall back to a known seeded lead if createdLeadId was not set this run\nconst leadId = pm.collectionVariables.get(\"createdLeadId\");\nif (!leadId || leadId === \"\") {\n    pm.collectionVariables.set(\"createdLeadId\", \"2\");\n}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:10000/leads/{{createdLeadId}}",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "10000",
+          "path": [
+            "leads",
+            "{{createdLeadId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Customers",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"Response is valid JSON\", function () {\n    pm.response.to.be.json;\n});\n\npm.test(\"Customer retrieved successfully\", function () {\n    const data = pm.response.json();\n    pm.expect(data.success).to.be.true;\n});\n\npm.test(\"Customer ID matches\", function () {\n    const data = pm.response.json();\n    pm.expect(data.data.customer_id).to.eql(25);\n});\n\npm.test(\"Customer name is correct\", function () {\n    const data = pm.response.json();\n    pm.expect(data.data.name).to.eql(\"Updated Postman Customer\");\n});\n\npm.test(\"Response time is acceptable\", function () {\n    pm.expect(pm.response.responseTime).to.be.below(500);\n});\n\npm.test(\"Customer email is correct\", function () {\n    const data = pm.response.json();\n    pm.expect(data.data.email).to.eql(\"updatedcustomer25@example.com\");\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:10000/customers/25",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "10000",
+          "path": [
+            "customers",
+            "25"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Customer",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"Response is valid JSON\", function () {\n    pm.response.to.be.json;\n});\n\npm.test(\"Customer updated successfully\", function () {\n    const data = pm.response.json();\n    pm.expect(data.success).to.be.true;\n    pm.expect(data.message).to.eql(\"Customer updated successfully\");\n});\n"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Updated Postman Customer\",\r\n  \"email\": \"updatedcustomer25@example.com\",\r\n  \"phone\": \"9876543211\",\r\n  \"company\": \"Updated Test Company\",\r\n  \"notes\": \"Updated through Postman\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:10000/customers/25",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "10000",
+          "path": [
+            "customers",
+            "25"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Reject Invalid Lead Email",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {\n    pm.response.to.have.status(400);\n});\n\npm.test(\"Response body is valid JSON\", function () {\n    pm.response.to.be.json;\n});\n\npm.test(\"Response indicates failure\", function () {\n    var jsonData = pm.response.json();\n    pm.expect(jsonData.success).to.be.false;\n    pm.expect(jsonData.message).to.equal(\"Invalid email format\");\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Invalid Email Test\",\r\n  \"email\": \"not-an-email\",\r\n  \"company\": \"Test Company\",\r\n  \"stage\": \"New\",\r\n  \"value\": 1000\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:10000/leads",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "10000",
+          "path": [
+            "leads"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Reject Lead Without Name",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {\n    pm.response.to.have.status(400);\n});\n\npm.test(\"Response has correct error structure\", function () {\n    const jsonData = pm.response.json();\n    pm.expect(jsonData).to.have.property(\"success\", false);\n    pm.expect(jsonData).to.have.property(\"message\");\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"email\": \"missingname@example.com\",\r\n  \"company\": \"Test Company\",\r\n  \"stage\": \"New\",\r\n  \"value\": 1000\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:10000/leads",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "10000",
+          "path": [
+            "leads"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Nonexistent Lead",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 404\", function () {\n    pm.response.to.have.status(404);\n});\n\npm.test(\"Response has correct structure\", function () {\n    const jsonData = pm.response.json();\n    pm.expect(jsonData).to.have.property(\"success\", false);\n    pm.expect(jsonData).to.have.property(\"message\", \"Lead not found\");\n    pm.expect(jsonData).to.have.property(\"data\", null);\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:10000/leads/999999",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "10000",
+          "path": [
+            "leads",
+            "999999"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Customer",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {\n    pm.response.to.have.status(201);\n});\n\npm.test(\"Response has success flag as true\", function () {\n    const jsonData = pm.response.json();\n    pm.expect(jsonData.success).to.be.true;\n});\n\npm.test(\"Response message indicates success\", function () {\n    const jsonData = pm.response.json();\n    pm.expect(jsonData.message).to.equal(\"Customer created successfully\");\n});\n\npm.test(\"Response contains customer_id\", function () {\n    const jsonData = pm.response.json();\n    pm.expect(jsonData.data).to.have.property(\"customer_id\");\n    pm.expect(jsonData.data.customer_id).to.be.a('number');\n    pm.collectionVariables.set(\"customerId\", jsonData.data.customer_id);\n});"
+            ]
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set(\"customerEmail\", `postman.${Date.now()}@example.com`);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Delete Test Customer\",\r\n  \"email\": \"delete.test.20261027@example.com\",\r\n  \"phone\": \"9876543210\",\r\n  \"company\": \"Test Company\",\r\n  \"notes\": \"Created for delete testing\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:10000/customers",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "10000",
+          "path": [
+            "customers"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Customer",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Response is valid JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Customer deleted successfully\", function () {\r\n    const data = pm.response.json();\r\n    pm.expect(data.success).to.be.true;\r\n});\r\n\r\npm.test(\"Success message is correct\", function () {\r\n    const data = pm.response.json();\r\n    pm.expect(data.message).to.eql(\"Customer deleted successfully\");\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:10000/customers/{{customerId}}",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "10000",
+          "path": [
+            "customers",
+            "{{customerId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": ""
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "createdLeadId",
+      "value": ""
+    },
+    {
+      "key": "customerId",
+      "value": ""
+    },
+    {
+      "key": "customerEmail",
+      "value": ""
+    },
+    {
+      "key": "leadEmail",
+      "value": ""
+    }
+  ]
+}
