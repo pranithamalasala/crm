@@ -1,0 +1,25 @@
+
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "10000:10000"
+    environment:
+      PORT: "10000"
+      FLASK_DEBUG: "false"
+      SECRET_KEY: ${SECRET_KEY:-docker-development-key-change-me}
+    volumes:
+      - ./backend/crm.db:/app/crm.db
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:10000
+    depends_on:
+      - backend
+    restart: unless-stopped
