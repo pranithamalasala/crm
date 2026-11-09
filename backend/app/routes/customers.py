@@ -6,13 +6,82 @@ from app.utils.helpers import success, error, rows_to_list, row_to_dict
 customers_bp = Blueprint("customers", __name__, url_prefix="/customers")
 
 
+
 @customers_bp.route("", methods=["GET"])
 def get_customers():
     db = get_db()
+
+    # 1. Read query parameters
+    try:
+        page = int(request.args.get("page", 1))
+        limit = int(request.args.get("limit", 10))
+    except ValueError:
+        return error("Page and limit must be integers", 400)
+
+    # 2. Validate pagination
+    if page < 1:
+        return error("Page must be greater than 0", 400)
+
+    if limit < 1 or limit > 100:
+        return error("Limit must be between 1 and 100", 400)
+
+    # 3. Build search filters
+    search = request.args.get("search", "").strip()
+
+    conditions = []
+    params = []
+
+    if search:
+        conditions.append(
+            "(name LIKE ? OR email LIKE ? OR company LIKE ?)"
+        )
+        keyword = f"%{search}%"
+        params.extend([keyword, keyword, keyword])
+
+    # 4. Build WHERE clause
+    where_clause = ""
+
+    if conditions:
+        where_clause = "WHERE " + " AND ".join(conditions)
+
+    # 5. Get total matching customers
+    count_query = f"""
+        SELECT COUNT(*) AS total
+        FROM customers
+        {where_clause}
+    """
+
+    total = db.execute(
+        count_query, params
+    ).fetchone()["total"]
+
+    # 6. Calculate pagination
+    offset = (page - 1) * limit
+
+    # 7. Fetch only the requested page
+    query = f"""
+        SELECT *
+        FROM customers
+        {where_clause}
+        ORDER BY created_at DESC, customer_id DESC
+        LIMIT ? OFFSET ?
+    """
+
     rows = db.execute(
-        "SELECT * FROM customers ORDER BY created_at DESC"
+        query, params + [limit, offset]
     ).fetchall()
-    return success(rows_to_list(rows))
+
+    # 8. Return paginated response
+    return success({
+        "customers": rows_to_list(rows),
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "total": total,
+            "total_pages": (total + limit - 1) // limit
+        }
+    })
+
 
 
 @customers_bp.route("/<int:customer_id>", methods=["GET"])
@@ -65,8 +134,9 @@ def create_customer():
             201,
         )
 
-    except Exception:
+    except Exception as e:
         db.rollback()
+        print("CREATE CUSTOMER ERROR:", repr(e))
         return error("Unable to create customer", 400)
 
 

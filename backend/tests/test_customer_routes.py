@@ -30,18 +30,26 @@ def make_customer():
     }
 
 
+
 def mock_db(customer=None, customers=None):
     db = MagicMock()
+    customers = customers or []
 
     def execute_side_effect(sql, params=()):
         result = MagicMock()
 
-        if "ORDER BY created_at DESC" in sql:
-            result.fetchall.return_value = customers or []
+        if "COUNT(*) AS total" in sql:
+            result.fetchone.return_value = {"total": len(customers)}
+
+        elif "ORDER BY created_at DESC" in sql:
+            result.fetchall.return_value = customers
+
         elif "SELECT * FROM customers WHERE" in sql:
             result.fetchone.return_value = customer
+
         elif "SELECT customer_id FROM customers WHERE" in sql:
             result.fetchone.return_value = customer
+
         else:
             result.fetchone.return_value = None
 
@@ -51,15 +59,23 @@ def mock_db(customer=None, customers=None):
     return db
 
 
+
+
 def test_get_customers(client):
     db = mock_db(customers=[make_customer()])
 
     with patch("app.routes.customers.get_db", return_value=db):
         response = client.get("/customers")
 
+    data = response.get_json()["data"]
+
     assert response.status_code == 200
     assert response.get_json()["success"] is True
-    assert len(response.get_json()["data"]) == 1
+    assert len(data["customers"]) == 1
+    assert data["pagination"]["page"] == 1
+    assert data["pagination"]["limit"] == 10
+    assert data["pagination"]["total"] == 1
+    assert data["pagination"]["total_pages"] == 1
 
 
 def test_get_customers_empty(client):
@@ -68,8 +84,13 @@ def test_get_customers_empty(client):
     with patch("app.routes.customers.get_db", return_value=db):
         response = client.get("/customers")
 
+    data = response.get_json()["data"]
+
     assert response.status_code == 200
-    assert response.get_json()["data"] == []
+    assert data["customers"] == []
+    assert data["pagination"]["total"] == 0
+    assert data["pagination"]["total_pages"] == 0
+
 
 
 def test_get_customer_found(client):
@@ -169,3 +190,44 @@ def test_delete_customer_not_found(client):
     assert response.status_code == 404
     assert response.get_json()["message"] == "Customer not found"
     db.commit.assert_not_called()
+
+def test_get_customers_page_2(client):
+    customers = [
+        {**make_customer(), "customer_id": 2, "name": "Customer 2"}
+    ]
+    db = mock_db(customers=customers)
+
+    with patch("app.routes.customers.get_db", return_value=db):
+        response = client.get("/customers?page=2&limit=5")
+
+    data = response.get_json()["data"]
+
+    assert response.status_code == 200
+    assert len(data["customers"]) == 1
+    assert data["pagination"]["page"] == 2
+    assert data["pagination"]["limit"] == 5
+
+
+def test_get_customers_invalid_page(client):
+    response = client.get("/customers?page=0")
+    assert response.status_code == 400
+
+
+def test_get_customers_invalid_limit(client):
+    response = client.get("/customers?limit=101")
+    assert response.status_code == 400
+
+
+def test_get_customers_invalid_page_type(client):
+    response = client.get("/customers?page=abc")
+    assert response.status_code == 400
+
+
+def test_get_customers_search(client):
+    db = mock_db(customers=[make_customer()])
+
+    with patch("app.routes.customers.get_db", return_value=db):
+        response = client.get("/customers?search=Test")
+
+    assert response.status_code == 200
+    assert len(response.get_json()["data"]["customers"]) == 1
